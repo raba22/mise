@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mise — Meal Planner</title>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F7F6F2; --surface: #FFFFFF; --surface2: #F0EFE9; --border: #E4E2DB;
+      --text: #1A1917; --text2: #6B6860; --text3: #9B9890;
+      --accent: #2D6A4F; --accent-light: #D8F3DC; --accent-text: #1B4332;
+      --amber: #E9A23B; --danger: #DC3545; --radius: 14px; --radius-sm: 9px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    #root { max-width: 430px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+
+    /* ── Nav ── */
+    .nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-brand { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+    .nav-brand em { color: var(--accent); font-style: normal; }
+    .nav-tabs { display: flex; gap: 2px; background: var(--surface2); padding: 3px; border-radius: 10px; }
+    .nav-tab { padding: 5px 13px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text2); border: none; background: none; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+    .nav-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-weight: 600; }
+
+    /* ── Score bar ── */
+    .score-card { margin: 14px 14px 0; background: var(--surface); border-radius: var(--radius); padding: 16px 18px; border: 1px solid var(--border); }
+    .score-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .score-main { }
+    .score-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 3px; }
+    .score-num { font-size: 42px; font-weight: 800; line-height: 1; color: var(--text); }
+    .score-num span { font-size: 20px; font-weight: 600; color: var(--text3); }
+    .score-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .streak-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--accent-light); color: var(--accent-text); padding: 4px 11px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+    .score-msg { font-size: 13px; color: var(--text2); }
+    .prog-row { margin-bottom: 8px; }
+    .prog-labels { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .prog-label { font-size: 11px; color: var(--text3); }
+    .prog-track { height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 4px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+    .prog-fill.plan { background: var(--amber); }
+    .prog-fill.cook { background: var(--accent); }
+
+    /* ── Week nav ── */
+    .week-nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 6px; }
+    .week-label { font-size: 14px; font-weight: 600; color: var(--text); }
+    .week-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: var(--text2); transition: background 0.1s; }
+    .week-btn:hover { background: var(--surface2); }
+
+    /* ── Meal grid ── */
+    .meal-section { padding: 0 14px; margin-bottom: 10px; }
+    .meal-section-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 5px; padding-left: 1px; }
+    .day-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .slot { border-radius: 9px; min-height: 56px; border: 1.5px dashed var(--border); background: var(--surface2); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 4px 3px; transition: all 0.12s; position: relative; }
+    .slot:hover { border-color: var(--accent); border-style: solid; background: var(--surface); }
+    .slot.filled { border-style: solid; border-color: var(--border); background: var(--surface); }
+    .slot.cooked { border-color: var(--accent); background: var(--accent-light); }
+    .slot.today-slot { box-shadow: 0 0 0 1.5px var(--accent); }
+    .slot-day { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text3); margin-bottom: 3px; }
+    .slot-day.is-today { color: var(--accent); }
+    .slot-name { font-size: 8.5px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.25; word-break: break-word; }
+    .slot-check { font-size: 13px; margin-top: 2px; }
+    .slot-plus { font-size: 17px; color: var(--text3); line-height: 1; }
+
+    /* ── Shopping list ── */
+    .shop-section { margin: 4px 14px 0; }
+    .shop-header { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 16px; cursor: pointer; }
+    .shop-header.open { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
+    .shop-header-left { font-size: 14px; font-weight: 700; }
+    .shop-header-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+    .shop-count { background: var(--surface2); padding: 2px 9px; border-radius: 10px; font-weight: 600; }
+    .shop-body { background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding-bottom: 8px; }
+    .shop-recipe-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); padding: 12px 16px 4px; }
+    .shop-item { display: flex; align-items: center; gap: 11px; padding: 6px 16px; cursor: pointer; transition: background 0.08s; }
+    .shop-item:hover { background: var(--surface2); }
+    .shop-cb { width: 19px; height: 19px; border-radius: 5px; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); transition: all 0.1s; }
+    .shop-cb.on { background: var(--accent); border-color: var(--accent); }
+    .shop-cb-check { color: white; font-size: 11px; font-weight: 700; }
+    .shop-item-text { font-size: 13px; }
+    .shop-item-text.done { text-decoration: line-through; color: var(--text3); }
+
+    /* ── Recipes ── */
+    .view-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 14px 10px; }
+    .view-title { font-size: 17px; font-weight: 800; }
+    .btn-primary { background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.1s; }
+    .btn-primary:hover { opacity: 0.88; }
+    .recipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px; }
+    .recipe-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 13px; cursor: pointer; transition: all 0.12s; }
+    .recipe-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .rc-name { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+    .rc-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .rc-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 8px; background: var(--surface2); color: var(--text2); }
+
+    /* ── Stats ── */
+    .stats-wrap { padding: 14px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+    .stat-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 14px; }
+    .big-num { font-size: 60px; font-weight: 800; line-height: 1; color: var(--text); }
+    .big-num-pct { font-size: 28px; color: var(--text3); }
+    .big-num-msg { font-size: 14px; color: var(--text2); margin-top: 5px; }
+    .streak-row { display: flex; align-items: center; gap: 14px; }
+    .streak-n { font-size: 56px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .streak-info { }
+    .streak-emoji { font-size: 24px; }
+    .streak-desc { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .streak-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .badge-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 14px 8px; text-align: center; transition: all 0.15s; }
+    .badge-box.earned { background: var(--accent-light); }
+    .badge-box.locked { opacity: 0.35; }
+    .badge-emoji { font-size: 26px; }
+    .badge-name { font-size: 10px; font-weight: 700; color: var(--text2); margin-top: 5px; line-height: 1.3; }
+    .badge-box.earned .badge-name { color: var(--accent-text); }
+    .hist-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .hist-week { font-size: 12px; color: var(--text2); width: 72px; flex-shrink: 0; }
+    .hist-bar-bg { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .hist-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s; }
+    .hist-score { font-size: 13px; font-weight: 700; width: 36px; text-align: right; color: var(--text); }
+
+    /* ── Modal system ── */
+    .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: flex; align-items: flex-end; animation: fadein 0.15s; }
+    @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+    .sheet { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-height: 88vh; overflow-y: auto; padding: 0 0 36px; animation: slideup 0.2s cubic-bezier(.32,1,.28,1); }
+    @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .sheet-handle { width: 38px; height: 4px; background: var(--border); border-radius: 2px; margin: 14px auto; }
+    .sheet-pad { padding: 0 18px; }
+    .sheet-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .sheet-meta { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+    .sheet-section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin: 16px 0 7px; }
+    .ing-list { list-style: none; }
+    .ing-item { font-size: 13px; color: var(--text); padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .method-text { font-size: 13px; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+    .sheet-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-cook { flex: 1; padding: 14px; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; background: var(--accent); color: white; transition: opacity 0.1s; }
+    .btn-cook.is-cooked { background: var(--accent-light); color: var(--accent-text); }
+    .btn-cook:hover { opacity: 0.88; }
+    .btn-secondary { flex: 1; padding: 14px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; background: var(--surface2); color: var(--text); }
+    .btn-remove { width: 100%; margin-top: 10px; padding: 11px; background: none; border: none; color: var(--danger); font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Recipe picker */
+    .picker-search-wrap { padding: 10px 16px 12px; position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .picker-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: var(--surface2); color: var(--text); }
+    .picker-input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .picker-item { display: flex; align-items: center; gap: 13px; padding: 13px 18px; cursor: pointer; transition: background 0.08s; }
+    .picker-item:hover { background: var(--surface2); }
+    .picker-item-name { font-size: 14px; font-weight: 600; }
+    .picker-item-meta { font-size: 12px; color: var(--text3); margin-top: 1px; }
+    .picker-arrow { color: var(--text3); font-size: 20px; margin-left: auto; }
+
+    /* Form */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: var(--surface); font-family: inherit; transition: border-color 0.1s; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    textarea.form-input { min-height: 90px; resize: vertical; line-height: 1.5; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-save { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+    .btn-cancel { width: 100%; padding: 12px; background: none; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; color: var(--text2); }
+
+    /* Misc */
+    .content { flex: 1; padding-bottom: 24px; }
+    .spacer { height: 12px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const DAY_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MEALS = ['Breakfast','Lunch','Dinner'];
+const MEAL_ICONS = ['☀️','🌤️','🌙'];
+const SK = 'mise_v1';
+
+const SEED_RECIPES = [
+  { id:'r1', name:'Pasta Napolitana', cuisine:'Italian', prepTime:20, cookTime:40, servings:4,
+    ingredients:['400g pasta','2 cloves garlic','1 can crushed tomatoes','handful fresh basil','olive oil','salt and pepper'],
+    method:'1. Boil salted water and cook pasta al dente.\n2. Fry garlic in olive oil until fragrant.\n3. Add crushed tomatoes, simmer 30 min.\n4. Toss pasta in sauce and serve topped with fresh basil.' },
+  { id:'r2', name:'Pongal', cuisine:'South Indian', prepTime:5, cookTime:20, servings:2,
+    ingredients:['1 cup rice','1/4 cup moong dhal','1 inch ginger grated','1 tsp black pepper','1 tsp jeera','10 cashews','2 tbsp ghee','salt to taste','pinch of asafoetida'],
+    method:'1. Fry pepper, jeera and cashews in ghee until golden.\n2. Boil rice with ginger, moong dhal, salt and asafoetida until soft.\n3. Mix fried spices into the rice and serve hot.' },
+  { id:'r3', name:'Chole', cuisine:'Indian', prepTime:10, cookTime:40, servings:4,
+    ingredients:['1 cup white channa (soaked overnight)','2 onions, finely chopped','1 tomato, chopped','1 tsp ginger garlic paste','1 tsp chilli powder','1 tsp garam masala','1 tsp coriander powder','salt','oil','2 bay leaves'],
+    method:'1. Boil channa with bay leaves until soft.\n2. Fry onions in oil until golden brown.\n3. Add ginger garlic paste and spices, cook 2 min.\n4. Add tomato and cook until soft.\n5. Add channa with water, simmer until thick.' },
+  { id:'r4', name:'Laksa', cuisine:'Malaysian', prepTime:10, cookTime:20, servings:2,
+    ingredients:['6 cloves garlic','small piece ginger','2 spring onions','2 tbsp soy sauce','3 tbsp laksa paste','200g fried tofu','200g dry noodles','400ml coconut milk','chilli sauce','1 tsp sugar'],
+    method:'1. Mix laksa paste, garlic, soy sauce and sugar into a paste.\n2. Pan-fry tofu until crispy.\n3. Boil noodles and set aside.\n4. Fry spring onions, ginger, add paste, then coconut milk.\n5. Simmer, add tofu and noodles. Garnish with spring onion.' },
+  { id:'r5', name:'Spinach Curry', cuisine:'Indian', prepTime:5, cookTime:15, servings:2,
+    ingredients:['2 cups spinach, washed','1 onion, finely chopped','2 red chillies','1 tsp ginger garlic paste','1 tsp jeera','2 tbsp oil','salt to taste'],
+    method:'1. Heat oil, add jeera and red chillies.\n2. Add onion and fry until golden.\n3. Add ginger garlic paste, cook 1 min.\n4. Add spinach, cook until all moisture evaporates.\n5. Season and serve with chapathi or rice.' },
+  { id:'r6', name:'Chia Pudding', cuisine:'Healthy', prepTime:5, cookTime:0, servings:1,
+    ingredients:['3 tbsp chia seeds','1 cup almond milk','1 tsp honey','mixed berries for topping','nuts for topping'],
+    method:'1. Combine chia seeds, almond milk and honey in a jar.\n2. Stir well to combine.\n3. Refrigerate overnight (at least 4 hours).\n4. Top with fresh berries and nuts before serving.' },
+  { id:'r7', name:'Poha', cuisine:'Indian', prepTime:5, cookTime:10, servings:2,
+    ingredients:['2 cups poha flakes','1 onion, diced','2 green chillies','1 tsp mustard seeds','8-10 curry leaves','1/4 tsp turmeric','salt to taste','lemon juice','oil','coriander for garnish'],
+    method:'1. Rinse poha in water and drain — should be soft but not mushy.\n2. Heat oil, splutter mustard seeds, add curry leaves.\n3. Add onion, chillies, turmeric — fry until soft.\n4. Add poha, mix gently on low heat.\n5. Season with salt, lemon juice. Garnish with coriander.' },
+  { id:'r8', name:'Green Grams Sundal', cuisine:'Indian', prepTime:5, cookTime:15, servings:2,
+    ingredients:['1 cup green grams (moong), soaked 4hrs','1 tsp mustard seeds','curry leaves','2 dried red chillies','1/4 tsp asafoetida','2 tbsp coconut, grated','salt','oil'],
+    method:'1. Boil soaked green grams until just tender, drain.\n2. Heat oil, add mustard seeds, curry leaves, red chillies.\n3. Add asafoetida, then cooked green grams.\n4. Stir fry 2-3 min, add grated coconut and salt.' },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getWeekKey(d = new Date()) {
+  const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = utc.getUTCDay() || 7;
+  utc.setUTCDate(utc.getUTCDate() + 4 - day);
+  const y1 = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
+  const w = Math.ceil((((utc - y1) / 864e5) + 1) / 7);
+  return `${utc.getUTCFullYear()}-W${String(w).padStart(2,'0')}`;
+}
+
+function getWeekDates(wk) {
+  const [yr, wn] = wk.split('-W').map(Number);
+  const jan4 = new Date(yr, 0, 4);
+  const mon = new Date(jan4);
+  mon.setDate(jan4.getDate() - ((jan4.getDay() || 7) - 1) + (wn - 1) * 7);
+  return Array.from({length:7}, (_, i) => { const d = new Date(mon); d.setDate(mon.getDate()+i); return d; });
+}
+
+function shiftWeek(wk, delta) {
+  const dates = getWeekDates(wk);
+  const d = new Date(dates[0]);
+  d.setDate(d.getDate() + delta * 7);
+  return getWeekKey(d);
+}
+
+function fmtWeekLabel(wk) {
+  const ds = getWeekDates(wk);
+  const o = { month:'short', day:'numeric' };
+  return `${ds[0].toLocaleDateString('en-AU',o)} – ${ds[6].toLocaleDateString('en-AU',o)}`;
+}
+
+function sk(di, meal) { return `${di}_${meal.toLowerCase()}`; }
+
+function calcScore(weekData) {
+  if (!weekData) return { planned:0, cooked:0, planPct:0, cookPct:0, score:0 };
+  const vals = Object.values(weekData).filter(Boolean);
+  const planned = vals.filter(s => s.recipeId).length;
+  const cooked  = vals.filter(s => s.cooked).length;
+  const planPct = Math.round(planned / 21 * 100);
+  const cookPct = planned > 0 ? Math.round(cooked / planned * 100) : 0;
+  const score   = Math.round(planPct * 0.35 + cookPct * 0.65);
+  return { planned, cooked, planPct, cookPct, score };
+}
+
+function calcStreak(weeks) {
+  const keys = Object.keys(weeks).sort().reverse();
+  let n = 0;
+  for (const k of keys) { if (calcScore(weeks[k]).cookPct >= 70) n++; else break; }
+  return n;
+}
+
+function calcBadges(data) {
+  const allW = Object.values(data.weeks);
+  const scores = allW.map(calcScore);
+  const streak = calcStreak(data.weeks);
+  const total = scores.reduce((s,w) => s + w.cooked, 0);
+  const cuisines = new Set(Object.values(data.weeks).flatMap(w =>
+    Object.values(w||{}).filter(Boolean).map(s => {
+      const r = data.recipes.find(r => r.id === s.recipeId);
+      return r?.cuisine;
+    }).filter(Boolean)
+  ));
+  return [
+    { id:'first',   icon:'📝', label:'First Plan',    earned: allW.some(w => Object.values(w||{}).some(s => s?.recipeId)) },
+    { id:'fullwk',  icon:'📅', label:'Full Week',     earned: scores.some(s => s.planPct === 100) },
+    { id:'chef',    icon:'👨‍🍳', label:'Chef Mode',     earned: scores.some(s => s.cookPct === 100 && s.planned > 0) },
+    { id:'roll2',   icon:'🔥', label:'On a Roll',     earned: streak >= 2 },
+    { id:'ded4',    icon:'💪', label:'Dedicated',     earned: streak >= 4 },
+    { id:'meals10', icon:'⭐', label:'10 Meals',      earned: total >= 10 },
+    { id:'variety', icon:'🌍', label:'Global Kitchen', earned: cuisines.size >= 4 },
+    { id:'meals25', icon:'🏆', label:'25 Meals',      earned: total >= 25 },
+    { id:'streak8', icon:'🌟', label:'Unstoppable',   earned: streak >= 8 },
+  ];
+}
+
+function loadData() {
+  try { const r = localStorage.getItem(SK); if (r) return JSON.parse(r); } catch(e) {}
+  return { recipes: SEED_RECIPES, weeks: {}, shopChecked: {} };
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function Nav({ view, setView }) {
+  return (
+    <nav className="nav">
+      <div className="nav-brand">mise<em>.</em></div>
+      <div className="nav-tabs">
+        {[['plan','Plan'],['recipes','Recipes'],['stats','Stats']].map(([v,l]) => (
+          <button key={v} className={`nav-tab ${view===v?'active':''}`} onClick={() => setView(v)}>{l}</button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+// ── Score card ────────────────────────────────────────────────────────────────
+function ScoreCard({ weekData, streak }) {
+  const { planned, cooked, planPct, cookPct, score } = calcScore(weekData);
+  const msg = score >= 85 ? '🔥 Crushing it!' : score >= 60 ? '👍 Good progress' : score >= 30 ? '📝 Keep going' : '🌱 Just getting started';
+  return (
+    <div className="score-card">
+      <div className="score-top">
+        <div className="score-main">
+          <div className="score-label">Week Score</div>
+          <div className="score-num">{score}<span>%</span></div>
+        </div>
+        <div className="score-badge">
+          {streak > 0 && <div className="streak-pill">🔥 {streak} wk{streak>1?'s':''}</div>}
+          <div className="score-msg">{msg}</div>
+        </div>
+      </div>
+      <div className="prog-row">
+        <div className="prog-labels">
+          <span className="prog-label">Planned: {planned}/21</span>
+          <span className="prog-label">{planPct}%</span>
+        </div>
+        <div className="prog-track"><div className="prog-fill plan" style={{width:`${planPct}%`}} /></div>
+      </div>
+      <div className="prog-row">
+        <div className="prog-labels">
+          <span className="prog-label">Cooked: {cooked}/{planned}</span>
+          <span className="prog-label">{cookPct}%</span>
+        </div>
+        <div className="prog-track"><div className="prog-fill cook" style={{width:`${cookPct}%`}} /></div>
+      </div>
+    </div>
+  );
+}
+
+// ── Meal grid ─────────────────────────────────────────────────────────────────
+function MealGrid({ weekData, dates, recipes, onSlot }) {
+  const todayStr = new Date().toDateString();
+  return (
+    <div>
+      {MEALS.map((meal, mi) => (
+        <div key={meal} className="meal-section">
+          <div className="meal-section-header">{MEAL_ICONS[mi]}  {meal}</div>
+          <div className="day-row">
+            {DAY_SHORT.map((day, di) => {
+              const slot = weekData?.[sk(di,meal)];
+              const recipe = slot?.recipeId ? recipes.find(r => r.id === slot.recipeId) : null;
+              const isToday = dates[di]?.toDateString() === todayStr;
+              return (
+                <div key={di}
+                  className={`slot ${recipe?'filled':''} ${slot?.cooked?'cooked':''} ${isToday?'today-slot':''}`}
+                  onClick={() => onSlot(di, meal, slot, recipe)}
+                >
+                  <div className={`slot-day ${isToday?'is-today':''}`}>{day}</div>
+                  {recipe
+                    ? <><div className="slot-name">{recipe.name}</div>{slot?.cooked && <div className="slot-check">✓</div>}</>
+                    : <div className="slot-plus">+</div>
+                  }
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Shopping list ─────────────────────────────────────────────────────────────
+function ShoppingList({ weekData, recipes, checked, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const seen = new Map();
+  Object.values(weekData||{}).filter(Boolean).forEach(s => {
+    if (s.recipeId && !seen.has(s.recipeId)) seen.set(s.recipeId, recipes.find(r => r.id === s.recipeId));
+  });
+  if (!seen.size) return null;
+  const totalIngs = [...seen.values()].reduce((n,r) => n + (r?.ingredients?.length||0), 0);
+  const doneN = Object.values(checked||{}).filter(Boolean).length;
+  return (
+    <div className="shop-section">
+      <div className={`shop-header ${open?'open':''}`} onClick={() => setOpen(!open)}>
+        <span className="shop-header-left">🛒 Shopping List</span>
+        <div className="shop-header-right">
+          <span className="shop-count">{doneN}/{totalIngs}</span>
+          <span>{open ? '▲' : '▼'}</span>
+        </div>
+      </div>
+      {open && (
+        <div className="shop-body">
+          {[...seen.values()].filter(Boolean).map(recipe => (
+            <div key={recipe.id}>
+              <div className="shop-recipe-label">{recipe.name}</div>
+              {recipe.ingredients?.map((ing, i) => {
+                const ck = `${recipe.id}_${i}`;
+                const done = checked?.[ck];
+                return (
+                  <div key={i} className="shop-item" onClick={() => onToggle(ck)}>
+                    <div className={`shop-cb ${done?'on':''}`}>
+                      {done && <span className="shop-cb-check">✓</span>}
+                    </div>
+                    <span className={`shop-item-text ${done?'done':''}`}>{ing}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Plan view ─────────────────────────────────────────────────────────────────
+function PlanView({ data, weekKey, setWeekKey, onAssign, onToggleCooked, onShopToggle }) {
+  const [modal, setModal] = useState(null);
+  const weekData = data.weeks[weekKey] || {};
+  const dates = getWeekDates(weekKey);
+  const streak = calcStreak(data.weeks);
+
+  const handleSlot = (di, meal, slot, recipe) => setModal({ di, meal, slot, recipe });
+  const assign = (di, meal, recipeId) => { onAssign(weekKey, di, meal, recipeId); setModal(null); };
+  const remove = (di, meal) => { onAssign(weekKey, di, meal, null); setModal(null); };
+
+  return (
+    <div className="content">
+      <ScoreCard weekData={weekData} streak={streak} />
+      <div className="week-nav">
+        <button className="week-btn" onClick={() => setWeekKey(shiftWeek(weekKey,-1))}>‹</button>
+        <div className="week-label">{fmtWeekLabel(weekKey)}</div>
+        <button className="week-btn" onClick={() => setWeekKey(shiftWeek(weekKey,1))}>›</button>
+      </div>
+      <MealGrid weekData={weekData} dates={dates} recipes={data.recipes} onSlot={handleSlot} />
+      <div className="spacer" />
+      <ShoppingList weekData={weekData} recipes={data.recipes}
+        checked={data.shopChecked?.[weekKey]}
+        onToggle={ck => onShopToggle(weekKey, ck)} />
+
+      {modal && !modal.recipe && (
+        <RecipePicker recipes={data.recipes}
+          onSelect={r => assign(modal.di, modal.meal, r.id)}
+          onClose={() => setModal(null)} />
+      )}
+      {modal?.recipe && modal.type !== 'change' && (
+        <SlotSheet recipe={modal.recipe} slot={modal.slot} di={modal.di} meal={modal.meal}
+          onCooked={() => { onToggleCooked(weekKey, modal.di, modal.meal); setModal(null); }}
+          onChange={() => setModal({...modal, type:'change'})}
+          onRemove={() => remove(modal.di, modal.meal)}
+          onClose={() => setModal(null)} />
+      )}
+      {modal?.recipe && modal.type === 'change' && (
+        <RecipePicker recipes={data.recipes}
+          onSelect={r => assign(modal.di, modal.meal, r.id)}
+          onClose={() => setModal(null)} />
+      )}
+    </div>
+  );
+}
+
+// ── Recipe picker sheet ───────────────────────────────────────────────────────
+function RecipePicker({ recipes, onSelect, onClose }) {
+  const [q, setQ] = useState('');
+  const inp = useRef();
+  useEffect(() => { setTimeout(() => inp.current?.focus(), 120); }, []);
+  const filtered = recipes.filter(r =>
+    r.name.toLowerCase().includes(q.toLowerCase()) ||
+    r.cuisine.toLowerCase().includes(q.toLowerCase())
+  );
+  return (
+    <div className="backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle" />
+        <div style={{padding:'0 18px 10px'}}><div className="sheet-title">Choose a recipe</div></div>
+        <div className="picker-search-wrap">
+          <input ref={inp} className="picker-input" placeholder="Search by name or cuisine…" value={q} onChange={e => setQ(e.target.value)} />
+        </div>
+        <div>
+          {filtered.map(r => {
+            const t = (r.prepTime||0)+(r.cookTime||0);
+            return (
+              <div key={r.id} className="picker-item" onClick={() => onSelect(r)}>
+                <div>
+                  <div className="picker-item-name">{r.name}</div>
+                  <div className="picker-item-meta">{r.cuisine}{t ? ` · ${t} min` : ''}{r.servings ? ` · serves ${r.servings}` : ''}</div>
+                </div>
+                <div className="picker-arrow">›</div>
+              </div>
+            );
+          })}
+          {!filtered.length && <div style={{padding:'28px', textAlign:'center', color:'var(--text3)', fontSize:13}}>No recipes match</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Slot detail sheet ─────────────────────────────────────────────────────────
+function SlotSheet({ recipe, slot, di, meal, onCooked, onChange, onRemove, onClose }) {
+  const t = (recipe.prepTime||0) + (recipe.cookTime||0);
+  return (
+    <div className="backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle" />
+        <div className="sheet-pad">
+          <div style={{fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text3)', marginBottom:5}}>{DAY_SHORT[di]} · {meal}</div>
+          <div className="sheet-title">{recipe.name}</div>
+          <div className="sheet-meta">{recipe.cuisine}{t ? ` · ${t} min` : ''}{recipe.servings ? ` · serves ${recipe.servings}` : ''}</div>
+          {recipe.ingredients?.length > 0 && <>
+            <div className="sheet-section">Ingredients</div>
+            <ul className="ing-list">{recipe.ingredients.map((x,i) => <li key={i} className="ing-item">{x}</li>)}</ul>
+          </>}
+          {recipe.method && <>
+            <div className="sheet-section">Method</div>
+            <div className="method-text">{recipe.method}</div>
+          </>}
+          <div className="sheet-actions">
+            <button className={`btn-cook ${slot?.cooked?'is-cooked':''}`} onClick={onCooked}>
+              {slot?.cooked ? '✓  Cooked!' : 'Mark as Cooked'}
+            </button>
+            <button className="btn-secondary" onClick={onChange}>Change</button>
+          </div>
+          <button className="btn-remove" onClick={onRemove}>Remove from plan</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Recipes view ──────────────────────────────────────────────────────────────
+function RecipesView({ data, onAdd, onEdit, onDelete }) {
+  const [modal, setModal] = useState(null);
+  return (
+    <div className="content">
+      <div className="view-header">
+        <div className="view-title">Recipes <span style={{fontWeight:400, fontSize:15, color:'var(--text3)'}}>({data.recipes.length})</span></div>
+        <button className="btn-primary" onClick={() => setModal('new')}>+ Add</button>
+      </div>
+      <div className="recipe-grid">
+        {data.recipes.map(r => {
+          const t = (r.prepTime||0)+(r.cookTime||0);
+          return (
+            <div key={r.id} className="recipe-card" onClick={() => setModal(r)}>
+              <div className="rc-name">{r.name}</div>
+              <div className="rc-tags">
+                {r.cuisine && <span className="rc-tag">{r.cuisine}</span>}
+                {t > 0 && <span className="rc-tag">{t} min</span>}
+                {r.servings > 0 && <span className="rc-tag">×{r.servings}</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {modal === 'new' && (
+        <RecipeForm onSave={r => { onAdd(r); setModal(null); }} onClose={() => setModal(null)} />
+      )}
+      {modal && modal !== 'new' && !modal._edit && (
+        <RecipeDetail recipe={modal}
+          onEdit={() => setModal({...modal, _edit:true})}
+          onDelete={() => { if (confirm(`Delete "${modal.name}"?`)) { onDelete(modal.id); setModal(null); } }}
+          onClose={() => setModal(null)} />
+      )}
+      {modal?._edit && (
+        <RecipeForm recipe={modal} onSave={r => { onEdit(r); setModal(null); }} onClose={() => setModal(null)} />
+      )}
+    </div>
+  );
+}
+
+function RecipeDetail({ recipe, onEdit, onDelete, onClose }) {
+  const t = (recipe.prepTime||0)+(recipe.cookTime||0);
+  return (
+    <div className="backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle" />
+        <div className="sheet-pad">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+            <div>
+              <div className="sheet-title">{recipe.name}</div>
+              <div className="sheet-meta">{recipe.cuisine}{t ? ` · ${t} min` : ''}{recipe.servings ? ` · serves ${recipe.servings}` : ''}</div>
+            </div>
+            <button onClick={onEdit} style={{background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:8, padding:'7px 14px', fontSize:13, cursor:'pointer', fontWeight:600}}>Edit</button>
+          </div>
+          {recipe.ingredients?.length > 0 && <>
+            <div className="sheet-section">Ingredients</div>
+            <ul className="ing-list">{recipe.ingredients.map((x,i) => <li key={i} className="ing-item">{x}</li>)}</ul>
+          </>}
+          {recipe.method && <>
+            <div className="sheet-section">Method</div>
+            <div className="method-text">{recipe.method}</div>
+          </>}
+          <button className="btn-remove" onClick={onDelete}>Delete recipe</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecipeForm({ recipe, onSave, onClose }) {
+  const [name, setName] = useState(recipe?.name||'');
+  const [cuisine, setCuisine] = useState(recipe?.cuisine||'');
+  const [prep, setPrep] = useState(recipe?.prepTime||'');
+  const [cook, setCook] = useState(recipe?.cookTime||'');
+  const [servings, setServings] = useState(recipe?.servings||'');
+  const [ings, setIngs] = useState(recipe?.ingredients?.join('\n')||'');
+  const [method, setMethod] = useState(recipe?.method||'');
+  const save = () => {
+    if (!name.trim()) { alert('Name is required'); return; }
+    onSave({ id: recipe?.id||`r${Date.now()}`, name:name.trim(), cuisine:cuisine.trim(),
+      prepTime:parseInt(prep)||0, cookTime:parseInt(cook)||0, servings:parseInt(servings)||0,
+      ingredients: ings.split('\n').map(s=>s.trim()).filter(Boolean), method:method.trim() });
+  };
+  return (
+    <div className="backdrop" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle" />
+        <div className="sheet-pad">
+          <div className="sheet-title" style={{marginBottom:18}}>{recipe ? 'Edit Recipe' : 'New Recipe'}</div>
+          <div className="form-group">
+            <label className="form-label">Name *</label>
+            <input className="form-input" value={name} onChange={e=>setName(e.target.value)} placeholder="Pasta Napolitana" />
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Cuisine</label>
+              <input className="form-input" value={cuisine} onChange={e=>setCuisine(e.target.value)} placeholder="Italian" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Serves</label>
+              <input className="form-input" type="number" value={servings} onChange={e=>setServings(e.target.value)} placeholder="4" />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Prep (min)</label>
+              <input className="form-input" type="number" value={prep} onChange={e=>setPrep(e.target.value)} placeholder="20" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Cook (min)</label>
+              <input className="form-input" type="number" value={cook} onChange={e=>setCook(e.target.value)} placeholder="30" />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Ingredients (one per line)</label>
+            <textarea className="form-input" value={ings} onChange={e=>setIngs(e.target.value)} placeholder={"400g pasta\n2 cloves garlic\n1 can crushed tomatoes"} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Method</label>
+            <textarea className="form-input" value={method} onChange={e=>setMethod(e.target.value)} placeholder="Step-by-step instructions…" style={{minHeight:80}} />
+          </div>
+          <button className="btn-save" onClick={save}>Save Recipe</button>
+          <button className="btn-cancel" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Stats view ────────────────────────────────────────────────────────────────
+function StatsView({ data }) {
+  const streak = calcStreak(data.weeks);
+  const badges = calcBadges(data);
+  const curScore = calcScore(data.weeks[getWeekKey()]);
+  const history = Object.entries(data.weeks)
+    .map(([k,v]) => ({ week:k, ...calcScore(v) }))
+    .sort((a,b) => a.week.localeCompare(b.week))
+    .slice(-8).reverse();
+
+  const streakMsg = streak >= 8 ? '🌟 Legendary!' : streak >= 4 ? '💪 Dedicated' : streak >= 2 ? '🔥 On a roll' : streak === 1 ? '✨ Keep it up' : '📅 Start a streak';
+
+  return (
+    <div className="content">
+      <div className="stats-wrap">
+        <div className="stat-card">
+          <div className="stat-card-title">This week</div>
+          <div className="big-num">{curScore.score}<span className="big-num-pct">%</span></div>
+          <div className="big-num-msg">
+            {curScore.score >= 85 ? '🔥 Crushing it!' : curScore.score >= 60 ? '👍 Great progress' : curScore.score >= 30 ? '📝 Keep building the habit' : '🌱 Plan your first meals'}
+          </div>
+          <div style={{marginTop:12, fontSize:13, color:'var(--text2)'}}>
+            {curScore.planned} meals planned · {curScore.cooked} cooked this week
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-title">Streak</div>
+          <div className="streak-row">
+            <div className="streak-n">{streak}</div>
+            <div className="streak-info">
+              <div className="streak-emoji">{streak >= 4 ? '💪' : streak >= 2 ? '🔥' : streak >= 1 ? '✨' : '📅'}</div>
+              <div className="streak-desc">{streak === 1 ? 'week in a row' : 'weeks in a row'}</div>
+              <div className="streak-sub">{streakMsg}</div>
+              <div className="streak-sub">Earn by cooking 70%+ of planned meals</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-title">Badges</div>
+          <div className="badge-grid">
+            {badges.map(b => (
+              <div key={b.id} className={`badge-box ${b.earned?'earned':'locked'}`}>
+                <div className="badge-emoji">{b.icon}</div>
+                <div className="badge-name">{b.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {history.length > 0 && (
+          <div className="stat-card">
+            <div className="stat-card-title">History</div>
+            {history.map(w => (
+              <div key={w.week} className="hist-row">
+                <div className="hist-week">{w.week}</div>
+                <div className="hist-bar-bg"><div className="hist-bar" style={{width:`${w.score}%`}} /></div>
+                <div className="hist-score">{w.score}%</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [data, setData] = useState(loadData);
+  const [view, setView] = useState('plan');
+  const [weekKey, setWeekKey] = useState(getWeekKey);
+
+  useEffect(() => {
+    try { localStorage.setItem(SK, JSON.stringify(data)); } catch(e) {}
+  }, [data]);
+
+  const mut = fn => setData(prev => fn(prev));
+
+  const onAssign = (wk, di, meal, recipeId) => mut(p => ({
+    ...p, weeks: { ...p.weeks, [wk]: { ...(p.weeks[wk]||{}),
+      [sk(di,meal)]: recipeId ? { recipeId, cooked:false } : undefined }}
+  }));
+
+  const onToggleCooked = (wk, di, meal) => mut(p => {
+    const slot = p.weeks[wk]?.[sk(di,meal)];
+    if (!slot) return p;
+    return { ...p, weeks: { ...p.weeks, [wk]: { ...p.weeks[wk],
+      [sk(di,meal)]: { ...slot, cooked:!slot.cooked }}}};
+  });
+
+  const onShopToggle = (wk, ck) => mut(p => ({
+    ...p, shopChecked: { ...p.shopChecked,
+      [wk]: { ...(p.shopChecked?.[wk]||{}), [ck]: !(p.shopChecked?.[wk]?.[ck]) }}
+  }));
+
+  const onAdd    = r => mut(p => ({ ...p, recipes:[...p.recipes, r] }));
+  const onEdit   = r => mut(p => ({ ...p, recipes: p.recipes.map(x => x.id===r.id ? r : x) }));
+  const onDelete = id => mut(p => ({ ...p, recipes: p.recipes.filter(r => r.id !== id) }));
+
+  return (
+    <>
+      <Nav view={view} setView={setView} />
+      {view === 'plan' && <PlanView data={data} weekKey={weekKey} setWeekKey={setWeekKey}
+        onAssign={onAssign} onToggleCooked={onToggleCooked} onShopToggle={onShopToggle} />}
+      {view === 'recipes' && <RecipesView data={data} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} />}
+      {view === 'stats' && <StatsView data={data} />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
