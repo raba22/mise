@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mise — Weekly Meal Planner</title>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FIREBASE SETUP INSTRUCTIONS
+     ───────────────────────────────────────────────────────────
+     1. Go to https://console.firebase.google.com
+     2. Create a new project (or use existing)
+     3. Enable Authentication → Sign-in method → Google (recommended) AND Email/Password
+        For Google: set a support email, save.
+     4. Enable Firestore Database (start in production mode)
+     5. In Firestore → Rules, paste:
+
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /users/{uid}/{document=**} {
+              allow read, write: if request.auth != null && request.auth.uid == uid;
+            }
+          }
+        }
+
+     6. Go to Project Settings → General → Your apps → Add web app
+     7. Copy the firebaseConfig object and paste it below
+     ═══════════════════════════════════════════════════════════ -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey:            "PASTE_YOUR_API_KEY_HERE",
+  authDomain:        "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "PASTE_YOUR_PROJECT_ID",
+  storageBucket:     "PASTE_YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId:             "PASTE_YOUR_APP_ID"
+};
+// ─────────────────────────────────────────────────────────────
+
+const IS_CONFIGURED = !FIREBASE_CONFIG.apiKey.includes('PASTE');
+let auth = null, db = null;
+if (IS_CONFIGURED) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+  db   = firebase.firestore();
+}
+</script>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+  :root {
+    --bg:      #0f0f12;
+    --surface: #1a1a22;
+    --card:    #22222e;
+    --border:  #2e2e3e;
+    --accent:  #7c6af7;
+    --accent2: #56cfb2;
+    --warn:    #f5a623;
+    --danger:  #e05c5c;
+    --text:    #e8e8f0;
+    --muted:   #7a7a96;
+    --radius:  10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 14px; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Layout */
+  .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { display: flex; align-items: center; padding: 0 24px; height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .topbar-logo { font-weight: 900; font-size: 1.2rem; letter-spacing: -0.5px; color: var(--accent); }
+  .topbar-spacer { flex: 1; }
+  .topbar-week { font-size: 0.78rem; color: var(--muted); }
+  .topbar-user { font-size: 0.78rem; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .main { flex: 1; padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: opacity 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary   { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost     { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-danger    { background: var(--danger); color: #fff; }
+  .btn-sm        { padding: 5px 11px; font-size: 0.76rem; }
+  .btn:disabled  { opacity: 0.45; cursor: not-allowed; }
+  .btn:not(:disabled):hover { opacity: 0.85; }
+
+  /* Forms */
+  input, select, textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--text); padding: 8px 12px; font-size: 0.85rem; outline: none; width: 100%; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field { margin-bottom: 14px; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+
+  /* Auth */
+  .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .auth-box  { width: 100%; max-width: 380px; }
+  .auth-logo { text-align: center; font-size: 2.4rem; font-weight: 900; color: var(--accent); margin-bottom: 4px; letter-spacing: -1px; }
+  .auth-sub  { text-align: center; color: var(--muted); font-size: 0.82rem; margin-bottom: 28px; }
+  .auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .auth-tab  { flex: 1; text-align: center; padding: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted); transition: all 0.15s; }
+  .auth-tab.active { color: var(--accent); border-color: var(--accent); }
+  .auth-error { background: rgba(224,92,92,0.12); border: 1px solid rgba(224,92,92,0.35); color: #f09090; font-size: 0.8rem; padding: 9px 12px; border-radius: 7px; margin-bottom: 14px; }
+  .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 10px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, background 0.15s; margin-bottom: 4px; }
+  .btn-google:hover:not(:disabled) { border-color: #4285F4; background: rgba(66,133,244,0.06); }
+  .btn-google:disabled { opacity: 0.45; cursor: not-allowed; }
+  .auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--muted); font-size: 0.75rem; }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Setup */
+  .setup-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .setup-box  { max-width: 560px; width: 100%; }
+  pre.setup-code { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 0.75rem; overflow-x: auto; color: #a0c4ff; line-height: 1.6; margin: 12px 0; }
+  .setup-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .setup-num  { background: var(--accent); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .setup-step p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+  .setup-step a { color: var(--accent); }
+
+  /* Week nav */
+  .week-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .week-nav-label { font-weight: 700; font-size: 0.95rem; flex: 1; text-align: center; }
+
+  /* Score pills */
+  .score-bar  { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .score-pill { flex: 1; min-width: 120px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; }
+  .score-pill-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+  .score-pill-value { font-size: 1.4rem; font-weight: 800; }
+  .c-accent  { color: var(--accent); }
+  .c-accent2 { color: var(--accent2); }
+  .c-warn    { color: var(--warn); }
+  .progress-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; }
+  .progress-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+  .streak-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; color: var(--warn); font-weight: 700; }
+
+  /* Calorie row */
+  .calorie-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .calorie-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(86,207,178,0.1); border: 1px solid rgba(86,207,178,0.25); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: var(--accent2); font-weight: 600; }
+  .calorie-pill-day { color: var(--muted); font-weight: 500; }
+
+  /* Planner table */
+  .planner-wrap { overflow-x: auto; margin-bottom: 10px; }
+  .planner-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+  .planner-table thead th { padding: 6px 8px 12px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); text-align: left; font-weight: 700; }
+  .planner-table thead th:first-child { width: 72px; }
+  .planner-table td { padding: 3px 4px; vertical-align: top; }
+  .planner-table td:first-child { padding: 3px 10px 3px 0; vertical-align: middle; }
+  .day-name { font-size: 0.82rem; font-weight: 700; }
+  .day-date { font-size: 0.67rem; color: var(--muted); }
+  .today .day-name { color: var(--accent); }
+  .today .day-date { color: var(--accent); opacity: 0.7; }
+
+  /* Meal slot */
+  .slot { min-height: 68px; border-radius: 8px; padding: 9px 10px; cursor: pointer; border: 1.5px dashed var(--border); background: var(--surface); display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.12s; position: relative; }
+  .slot.empty:hover { border-color: var(--accent); border-style: solid; }
+  .slot.filled { border-style: solid; border-color: var(--border); background: var(--card); align-items: flex-start; justify-content: flex-start; }
+  .slot.cooked { border-color: var(--accent2); }
+  .slot.cooked::after { content: '✓'; position: absolute; top: 6px; right: 9px; font-size: 0.68rem; color: var(--accent2); font-weight: 700; }
+  .slot-empty-icon { font-size: 1.1rem; color: var(--muted); }
+  .slot-empty-text { font-size: 0.66rem; color: var(--muted); margin-top: 2px; }
+  .slot-name { font-size: 0.8rem; font-weight: 600; line-height: 1.3; }
+  .slot-meta { font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
+  .slot-kcal { font-size: 0.62rem; color: var(--accent2); font-weight: 600; margin-top: 1px; }
+  .slot-btn  { margin-top: 6px; padding: 3px 8px; font-size: 0.68rem; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+  .slot-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* Modal */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
+  .modal   { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
+  .modal-sm { max-width: 420px; }
+  .modal-hd { display: flex; align-items: center; padding: 18px 20px 0; gap: 10px; }
+  .modal-title { font-weight: 700; font-size: 1rem; flex: 1; }
+  .modal-bd { padding: 16px 20px 22px; }
+
+  /* Ingredient rows */
+  .ing-row { display: grid; grid-template-columns: 1fr 76px 76px 28px; gap: 6px; margin-bottom: 7px; align-items: center; }
+  .ing-hdr { font-size: 0.67rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding-bottom: 2px; }
+  .ing-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; line-height: 1; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .ing-del:hover { background: rgba(224,92,92,0.15); color: var(--danger); }
+
+  /* Picker */
+  .picker-list { max-height: 52vh; overflow-y: auto; }
+  .picker-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.12s; }
+  .picker-item:hover { background: var(--card); }
+  .picker-item-name { font-weight: 600; font-size: 0.85rem; flex: 1; }
+  .picker-item-meta { font-size: 0.72rem; color: var(--muted); }
+
+  /* Recipe grid */
+  .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; }
+  .recipe-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color 0.12s; }
+  .recipe-card:hover { border-color: var(--accent); }
+  .recipe-card-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 5px; }
+  .recipe-card-meta { font-size: 0.72rem; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Grocery */
+  .shop-section-title { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 8px; }
+  .shop-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; }
+  .shop-item.done { opacity: 0.42; }
+  .shop-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent2); flex-shrink: 0; cursor: pointer; }
+  .shop-item-text { flex: 1; font-size: 0.83rem; }
+  .shop-item.done .shop-item-text { text-decoration: line-through; }
+  .shop-item-qty { font-size: 0.75rem; color: var(--accent2); font-weight: 600; white-space: nowrap; }
+  .shop-del { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 0.85rem; }
+  .shop-del:hover { color: var(--danger); }
+  .manual-row { display: flex; gap: 8px; margin-top: 10px; }
+
+  /* Tabs */
+  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); padding: 4px; border-radius: var(--radius); border: 1px solid var(--border); width: fit-content; }
+  .view-tab  { padding: 6px 16px; border-radius: 7px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--muted); transition: all 0.12s; border: none; background: none; }
+  .view-tab.active { background: var(--accent); color: #fff; }
+
+  /* Misc */
+  .section-hd  { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .section-ttl { font-weight: 700; font-size: 1rem; flex: 1; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.85rem; line-height: 1.7; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: rgba(124,106,247,0.12); color: var(--accent); border: 1px solid rgba(124,106,247,0.25); }
+  .tag-green { background: rgba(86,207,178,0.12); color: var(--accent2); border-color: rgba(86,207,178,0.25); }
+  .divider { height: 1px; background: var(--border); margin: 18px 0; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-full { display: flex; align-items: center; justify-content: center; min-height: 100vh; gap: 12px; color: var(--muted); font-size: 0.85rem; }
+  .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  select option { background: var(--surface); }
+  @media (max-width: 600px) {
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .main { padding: 14px; }
+    .topbar { padding: 0 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── Constants ──────────────────────────────────────────────────
+const DAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MEALS = ['Breakfast','Lunch','Dinner'];
+const ICONS = ['☀️','🌤️','🌙'];
+
+// ── Week helpers ───────────────────────────────────────────────
+function toISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return `${d.getUTCFullYear()}-W${String(Math.ceil((((d-y)/86400000)+1)/7)).padStart(2,'0')}`;
+}
+
+function weekStart(wk) {
+  const [yr, w] = wk.split('-W');
+  const jan4 = new Date(Date.UTC(+yr, 0, 4));
+  const s = new Date(jan4);
+  s.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay()||7) - 1));
+  s.setUTCDate(s.getUTCDate() + (parseInt(w)-1)*7);
+  return s;
+}
+
+function weekRange(wk) {
+  const s = weekStart(wk), e = new Date(s);
+  e.setUTCDate(e.getUTCDate()+6);
+  const o = { month:'short', day:'numeric', timeZone:'UTC' };
+  return `${s.toLocaleDateString('en-AU',o)} – ${e.toLocaleDateString('en-AU',o)}`;
+}
+
+function dayDateStr(wk, di) {
+  const d = new Date(weekStart(wk));
+  d.setUTCDate(d.getUTCDate()+di);
+  return d.toLocaleDateString('en-AU',{month:'short',day:'numeric',timeZone:'UTC'});
+}
+
+function todayStr() {
+  return new Date().toLocaleDateString('en-AU',{month:'short',day:'numeric'});
+}
+
+function uid() { return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+
+// ── Firestore refs ─────────────────────────────────────────────
+const rCol  = uid => db.collection('users').doc(uid).collection('recipes');
+const wDoc  = (uid,wk) => db.collection('users').doc(uid).collection('weeks').doc(wk);
+const stDoc = uid => db.collection('users').doc(uid).collection('meta').doc('streak');
+
+// ── Seed data ──────────────────────────────────────────────────
+const SEEDS = [
+  { name:'Pasta Napolitana', cuisine:'Italian', prepTime:5, cookTime:20, servings:2, calories:480,
+    ingredients:[{item:'pasta',qty:'400',unit:'g'},{item:'garlic cloves',qty:'2',unit:''},{item:'crushed tomatoes',qty:'1',unit:'can'},{item:'fresh basil',qty:'handful',unit:''},{item:'olive oil',qty:'2',unit:'tbsp'},{item:'salt and pepper',qty:'to taste',unit:''}],
+    method:'Sauté garlic in olive oil. Add crushed tomatoes, simmer 15 min. Cook pasta al dente. Combine, finish with torn basil.' },
+  { name:'Pongal', cuisine:'South Indian', prepTime:5, cookTime:20, servings:2, calories:390,
+    ingredients:[{item:'rice',qty:'1',unit:'cup'},{item:'moong dhal',qty:'1/4',unit:'cup'},{item:'salt',qty:'1',unit:'tsp'},{item:'asafoetida',qty:'pinch',unit:''},{item:'ginger',qty:'1',unit:'inch'},{item:'black pepper',qty:'1',unit:'tsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'cashews',qty:'10',unit:''},{item:'ghee',qty:'2',unit:'tbsp'}],
+    method:'Fry pepper, jeera and cashews in ghee until golden. Boil rice with moong dhal, ginger, salt and asafoetida until mushy. Mix.' },
+  { name:'Chole', cuisine:'Indian', prepTime:10, cookTime:40, servings:4, calories:320,
+    ingredients:[{item:'white channa, soaked overnight',qty:'1',unit:'cup'},{item:'onions, finely chopped',qty:'2',unit:''},{item:'tomato, finely chopped',qty:'1',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'chilli powder',qty:'1',unit:'tsp'},{item:'green chillies',qty:'2',unit:''},{item:'salt',qty:'to taste',unit:''},{item:'garam masala',qty:'1',unit:'tsp'},{item:'coriander powder',qty:'1',unit:'tsp'},{item:'bay leaves',qty:'2',unit:''},{item:'tea bags',qty:'2',unit:''},{item:'oil',qty:'2',unit:'tbsp'}],
+    method:'Pressure cook chickpeas with tea bags (gives colour). Sauté onions, add masalas and tomato. Add chickpeas, simmer 15 min.' },
+  { name:'Laksa', cuisine:'Malaysian', prepTime:10, cookTime:20, servings:2, calories:560,
+    ingredients:[{item:'garlic, chopped',qty:'6',unit:'cloves'},{item:'ginger, chopped',qty:'small piece',unit:''},{item:'spring onions',qty:'2',unit:''},{item:'soy sauce',qty:'2',unit:'tbsp'},{item:'olive oil',qty:'2',unit:'tbsp'},{item:'sugar',qty:'1',unit:'tsp'},{item:'laksa paste',qty:'3',unit:'tbsp'},{item:'fried tofu',qty:'200',unit:'g'},{item:'dry noodles',qty:'200',unit:'g'},{item:'chilli flakes',qty:'1',unit:'tsp'},{item:'chilli sauce',qty:'2',unit:'tbsp'},{item:'coconut milk',qty:'400',unit:'ml'}],
+    method:'Make paste with chilli sauce, laksa paste, garlic, soy sauce, oil, sugar. Pan-fry tofu. Boil noodles. Build coconut broth, add everything.' },
+  { name:'Spinach Curry', cuisine:'Indian', prepTime:5, cookTime:15, servings:2, calories:210,
+    ingredients:[{item:'spinach, washed',qty:'2',unit:'cups'},{item:'onion, finely chopped',qty:'1',unit:''},{item:'red chillies',qty:'2',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'oil',qty:'2',unit:'tbsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'salt',qty:'to taste',unit:''}],
+    method:'Heat oil, add jeera and red chillies. Fry onion until golden. Add spinach, cook until water evaporates. Season and serve.' },
+  { name:'Chia Pudding', cuisine:'Healthy', prepTime:5, cookTime:0, servings:1, calories:280,
+    ingredients:[{item:'chia seeds',qty:'3',unit:'tbsp'},{item:'almond milk',qty:'200',unit:'ml'},{item:'honey',qty:'1',unit:'tsp'},{item:'vanilla extract',qty:'few drops',unit:''}],
+    method:'Combine all ingredients, stir well, refrigerate overnight. Top with fresh fruit before serving.' },
+  { name:'Poha', cuisine:'Indian', prepTime:5, cookTime:10, servings:2, calories:250,
+    ingredients:[{item:'flattened rice (poha)',qty:'2',unit:'cups'},{item:'onion, chopped',qty:'1',unit:''},{item:'green chilli',qty:'1',unit:''},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'turmeric',qty:'1/4',unit:'tsp'},{item:'lemon juice',qty:'1',unit:'tbsp'},{item:'oil',qty:'1',unit:'tbsp'},{item:'coriander leaves',qty:'handful',unit:''}],
+    method:'Rinse and soak poha 5 min, drain. Temper mustard seeds, chilli and onion in oil. Add poha with turmeric, toss. Finish with lemon and coriander.' },
+  { name:'Green Grams Sundal', cuisine:'South Indian', prepTime:5, cookTime:15, servings:2, calories:190,
+    ingredients:[{item:'whole green moong',qty:'1',unit:'cup'},{item:'grated coconut',qty:'3',unit:'tbsp'},{item:'green chillies',qty:'2',unit:''},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'curry leaves',qty:'1',unit:'sprig'},{item:'salt',qty:'to taste',unit:''},{item:'oil',qty:'1',unit:'tbsp'}],
+    method:'Cook moong until just soft. Temper mustard seeds, curry leaves and chilli. Add moong and coconut, mix well.' },
+];
+
+// ══════════════════════════════════════════════════════════════
+//  SETUP SCREEN
+// ══════════════════════════════════════════════════════════════
+function SetupScreen() {
+  return (
+    <div className="setup-wrap">
+      <div className="setup-box">
+        <div style={{textAlign:'center',marginBottom:28}}>
+          <div style={{fontSize:'2.6rem',fontWeight:900,color:'var(--accent)',letterSpacing:'-1px'}}>mise</div>
+          <div style={{color:'var(--muted)',marginTop:4,fontSize:'0.83rem'}}>Firebase is not configured yet</div>
+        </div>
+        <div className="card">
+          <div style={{fontWeight:700,marginBottom:18}}>One-time setup — 5 minutes</div>
+          {[
+            ['Go to', <><a href="https://console.firebase.google.com" target="_blank" style={{color:'var(--accent)'}}>console.firebase.google.com</a> and create a new project</>],
+            ['Auth', 'Enable Authentication → Sign-in method → Google (set a support email, save). Also enable Email/Password for the fallback form.'],
+            ['Firestore', 'Enable Firestore Database (production mode). In Rules, paste:'],
+            ['Web app', 'Project Settings → General → Your apps → Add web app → copy the config'],
+            ['Paste config', 'Open this mise.html file in a text editor, find FIREBASE_CONFIG near the top, paste your values, save and refresh.'],
+          ].map(([n,t],i)=>(
+            <div className="setup-step" key={i}>
+              <div className="setup-num">{i+1}</div>
+              <p><strong>{n}: </strong>{t}</p>
+            </div>
+          ))}
+          <pre className="setup-code">{`rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid;
+    }
+  }
+}`}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AUTH SCREEN
+// ══════════════════════════════════════════════════════════════
+function AuthScreen() {
+  const [tab,  setTab]  = useState('login');
+  const [email,setEmail]= useState('');
+  const [pass, setPass] = useState('');
+  const [name, setName] = useState('');
+  const [err,  setErr]  = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function signInGoogle() {
+    setErr(''); setBusy(true);
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch(ex) {
+      if (ex.code !== 'auth/popup-closed-by-user') setErr(ex.message);
+    } finally { setBusy(false); }
+  }
+
+  async function submit(e) {
+    e.preventDefault(); setErr(''); setBusy(true);
+    try {
+      if (tab === 'login') {
+        await auth.signInWithEmailAndPassword(email, pass);
+      } else {
+        const c = await auth.createUserWithEmailAndPassword(email, pass);
+        if (name) await c.user.updateProfile({ displayName: name });
+      }
+    } catch(ex) { setErr(ex.message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-box">
+        <div className="auth-logo">mise</div>
+        <div className="auth-sub">Weekly meal planning, made simple</div>
+        <div className="card">
+          {/* Google sign-in */}
+          <button className="btn-google" onClick={signInGoogle} disabled={busy}>
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            {busy ? <span className="spinner" style={{width:16,height:16}}/> : 'Continue with Google'}
+          </button>
+
+          <div className="auth-divider"><span>or</span></div>
+
+          <div className="auth-tabs">
+            {['login','signup'].map(t=>(
+              <div key={t} className={`auth-tab ${tab===t?'active':''}`} onClick={()=>setTab(t)}>
+                {t==='login'?'Sign in with email':'Create account'}
+              </div>
+            ))}
+          </div>
+          {err && <div className="auth-error">{err}</div>}
+          <form onSubmit={submit}>
+            {tab==='signup' && <div className="field"><label>Name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" autoFocus/></div>}
+            <div className="field"><label>Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus={tab==='login'}/></div>
+            <div className="field"><label>Password</label><input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder={tab==='signup'?'Min 6 characters':'Password'} required/></div>
+            <button type="submit" className="btn btn-secondary" style={{width:'100%',justifyContent:'center'}} disabled={busy}>
+              {busy?<span className="spinner"/>:(tab==='login'?'Sign in':'Create account')}
+            </button>
+          </form>
+        </div>
+        <div style={{textAlign:'center',color:'var(--muted)',fontSize:'0.72rem',marginTop:18}}>Your data is private and stored securely in the cloud.</div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RECIPE FORM MODAL
+// ══════════════════════════════════════════════════════════════
+function RecipeFormModal({ initial, onSave, onClose }) {
+  const blank = { name:'', cuisine:'', prepTime:'', cookTime:'', servings:'2', calories:'', ingredients:[{item:'',qty:'',unit:''}], method:'' };
+  const [form, setForm] = useState(initial || blank);
+  const [busy, setBusy] = useState(false);
+
+  const sf = (k,v) => setForm(f=>({...f,[k]:v}));
+  const si = (i,k,v) => setForm(f=>{ const a=[...f.ingredients]; a[i]={...a[i],[k]:v}; return {...f,ingredients:a}; });
+  const addIng = () => setForm(f=>({...f,ingredients:[...f.ingredients,{item:'',qty:'',unit:''}]}));
+  const delIng = i => setForm(f=>({...f,ingredients:f.ingredients.filter((_,j)=>j!==i)}));
+
+  async function save(e) {
+    e.preventDefault(); if(!form.name.trim()) return; setBusy(true);
+    await onSave({ ...form,
+      prepTime:  parseInt(form.prepTime)||0,
+      cookTime:  parseInt(form.cookTime)||0,
+      servings:  parseInt(form.servings)||1,
+      calories:  parseInt(form.calories)||0,
+      ingredients: form.ingredients.filter(r=>r.item.trim()),
+    });
+    setBusy(false);
+  }
+
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-hd">
+          <div className="modal-title">{initial?'Edit Recipe':'New Recipe'}</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-bd">
+          <form onSubmit={save}>
+            <div className="field"><label>Name</label><input value={form.name} onChange={e=>sf('name',e.target.value)} placeholder="e.g. Pasta Napolitana" required autoFocus/></div>
+            <div className="two-col">
+              <div className="field"><label>Cuisine</label><input value={form.cuisine} onChange={e=>sf('cuisine',e.target.value)} placeholder="e.g. Italian"/></div>
+              <div className="field"><label>Calories / serving (kcal)</label><input type="number" min="0" value={form.calories} onChange={e=>sf('calories',e.target.value)} placeholder="e.g. 480"/></div>
+            </div>
+            <div className="three-col">
+              <div className="field"><label>Prep (min)</label><input type="number" min="0" value={form.prepTime} onChange={e=>sf('prepTime',e.target.value)} placeholder="5"/></div>
+              <div className="field"><label>Cook (min)</label><input type="number" min="0" value={form.cookTime} onChange={e=>sf('cookTime',e.target.value)} placeholder="20"/></div>
+              <div className="field"><label>Servings</label><input type="number" min="1" value={form.servings} onChange={e=>sf('servings',e.target.value)} placeholder="2"/></div>
+            </div>
+            <div className="field">
+              <label>Ingredients</label>
+              <div className="ing-row" style={{marginBottom:5}}>
+                <span className="ing-hdr">Item</span>
+                <span className="ing-hdr">Qty</span>
+                <span className="ing-hdr">Unit</span>
+                <span/>
+              </div>
+              {form.ingredients.map((r,i)=>(
+                <div className="ing-row" key={i}>
+                  <input value={r.item} onChange={e=>si(i,'item',e.target.value)} placeholder="garlic cloves"/>
+                  <input value={r.qty}  onChange={e=>si(i,'qty', e.target.value)} placeholder="2"/>
+                  <input value={r.unit} onChange={e=>si(i,'unit',e.target.value)} placeholder="cloves"/>
+                  <button type="button" className="ing-del" onClick={()=>delIng(i)} disabled={form.ingredients.length<=1}>×</button>
+                </div>
+              ))}
+              <button type="button" className="btn btn-ghost btn-sm" onClick={addIng} style={{marginTop:4}}>+ ingredient</button>
+            </div>
+            <div className="field"><label>Method (optional)</label><textarea rows={3} value={form.method} onChange={e=>sf('method',e.target.value)} placeholder="Step-by-step…" style={{resize:'vertical'}}/></div>
+            <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:4}}>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={busy}>{busy?<span className="spinner"/>:'Save recipe'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MEAL PICKER MODAL
+// ══════════════════════════════════════════════════════════════
+function MealPickerModal({ recipes, currentId, onPick, onClear, onClose }) {
+  const [q, setQ] = useState('');
+  const filtered = recipes.filter(r =>
+    r.name.toLowerCase().includes(q.toLowerCase()) ||
+    (r.cuisine||'').toLowerCase().includes(q.toLowerCase())
+  );
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal modal-sm">
+        <div className="modal-hd">
+          <div className="modal-title">Pick a recipe</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-bd">
+          <div style={{marginBottom:10}}><input placeholder="Search…" value={q} onChange={e=>setQ(e.target.value)} autoFocus/></div>
+          {currentId && <button className="btn btn-ghost btn-sm" style={{color:'var(--danger)',marginBottom:10}} onClick={onClear}>✕ Clear slot</button>}
+          <div className="picker-list">
+            {filtered.length===0 && <div className="empty-state">No recipes match</div>}
+            {filtered.map(r=>(
+              <div key={r.id} className="picker-item" onClick={()=>onPick(r)}>
+                <div style={{flex:1}}>
+                  <div className="picker-item-name">{r.name}</div>
+                  <div className="picker-item-meta">
+                    {r.cuisine && <span>{r.cuisine}</span>}
+                    {(r.prepTime||r.cookTime) ? <span> · {(r.prepTime||0)+(r.cookTime||0)} min</span> : null}
+                    {r.calories>0 ? <span style={{color:'var(--accent2)'}}> · {r.calories} kcal</span> : null}
+                  </div>
+                </div>
+                {currentId===r.id && <span style={{color:'var(--accent)',fontSize:'0.75rem',fontWeight:700}}>✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RECIPE DETAIL MODAL
+// ══════════════════════════════════════════════════════════════
+function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
+  const total = (recipe.prepTime||0)+(recipe.cookTime||0);
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-hd">
+          <div className="modal-title">{recipe.name}</div>
+          <div style={{display:'flex',gap:6}}>
+            <button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button>
+            <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+          </div>
+        </div>
+        <div className="modal-bd">
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+            {recipe.cuisine && <span className="tag">{recipe.cuisine}</span>}
+            {total>0 && <span className="tag">{total} min</span>}
+            {recipe.servings && <span className="tag">{recipe.servings} servings</span>}
+            {recipe.calories>0 && <span className="tag tag-green">{recipe.calories} kcal / serving</span>}
+          </div>
+          {(recipe.ingredients||[]).length>0 && <>
+            <div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Ingredients</div>
+            {recipe.ingredients.map((ing,i)=>(
+              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)',fontSize:'0.83rem'}}>
+                <span>{ing.item}</span>
+                <span style={{color:'var(--accent2)',fontWeight:600}}>{[ing.qty,ing.unit].filter(Boolean).join(' ')}</span>
+              </div>
+            ))}
+            <div style={{marginBottom:16}}/>
+          </>}
+          {recipe.method && <>
+            <div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Method</div>
+            <div style={{fontSize:'0.82rem',color:'var(--muted)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{recipe.method}</div>
+          </>}
+          <div className="divider"/>
+          <button className="btn btn-danger btn-sm" onClick={onDelete}>Delete recipe</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GROCERY TAB  (proper component to allow useState)
+// ══════════════════════════════════════════════════════════════
+function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
+  const [manualInput, setManualInput] = useState('');
+
+  // Build recipe map from planned meals
+  const recipeMap = new Map();
+  if (weekData?.meals) {
+    Object.values(weekData.meals).forEach(slot => {
+      const r = recipes.find(x=>x.id===slot.recipeId);
+      if (r && !recipeMap.has(r.id)) recipeMap.set(r.id, r);
+    });
+  }
+
+  async function toggleCheck(key) {
+    const sc = { ...(weekData?.shopChecked||{}), [key]: !(weekData?.shopChecked?.[key]) };
+    await wDocFn(userId, weekKey).set({ ...weekData, shopChecked: sc }, { merge: true });
+  }
+
+  async function addManual() {
+    if (!manualInput.trim()) return;
+    const items = [...(weekData?.manualItems||[]), { id: uid(), text: manualInput.trim(), checked: false }];
+    await wDocFn(userId, weekKey).set({ ...weekData, manualItems: items }, { merge: true });
+    setManualInput('');
+  }
+
+  async function toggleManual(id) {
+    const items = (weekData?.manualItems||[]).map(it=>it.id===id?{...it,checked:!it.checked}:it);
+    await wDocFn(userId, weekKey).set({ ...weekData, manualItems: items }, { merge: true });
+  }
+
+  async function deleteManual(id) {
+    const items = (weekData?.manualItems||[]).filter(it=>it.id!==id);
+    await wDocFn(userId, weekKey).set({ ...weekData, manualItems: items }, { merge: true });
+  }
+
+  const noMeals = recipeMap.size === 0;
+  const noManual = (weekData?.manualItems||[]).length === 0;
+
+  return (<>
+    <div className="section-hd">
+      <div className="section-ttl">Grocery List</div>
+      <div style={{fontSize:'0.75rem',color:'var(--muted)'}}>{weekRange(weekKey)}</div>
+    </div>
+
+    {noMeals && noManual && (
+      <div className="empty-state">No meals planned this week yet.<br/>Head to the Planner tab to add some.</div>
+    )}
+
+    {/* Per-recipe ingredient sections */}
+    {[...recipeMap.values()].map(recipe=>(
+      <div key={recipe.id}>
+        <div className="shop-section-title">{recipe.name}</div>
+        {(recipe.ingredients||[]).map((ing,i)=>{
+          const key = `${recipe.id}_${i}`;
+          const checked = !!(weekData?.shopChecked?.[key]);
+          const qty = [ing.qty, ing.unit].filter(Boolean).join(' ');
+          return (
+            <div key={i} className={`shop-item ${checked?'done':''}`}>
+              <input type="checkbox" checked={checked} onChange={()=>toggleCheck(key)}/>
+              <span className="shop-item-text">{ing.item}</span>
+              {qty && <span className="shop-item-qty">{qty}</span>}
+            </div>
+          );
+        })}
+      </div>
+    ))}
+
+    {/* Manual items */}
+    <div>
+      <div className="shop-section-title">Added manually</div>
+      {(weekData?.manualItems||[]).map(it=>(
+        <div key={it.id} className={`shop-item ${it.checked?'done':''}`}>
+          <input type="checkbox" checked={it.checked} onChange={()=>toggleManual(it.id)}/>
+          <span className="shop-item-text">{it.text}</span>
+          <button className="shop-del" onClick={()=>deleteManual(it.id)}>✕</button>
+        </div>
+      ))}
+      <div className="manual-row">
+        <input
+          placeholder="Add an item…"
+          value={manualInput}
+          onChange={e=>setManualInput(e.target.value)}
+          onKeyDown={e=>e.key==='Enter'&&addManual()}
+        />
+        <button className="btn btn-primary btn-sm" onClick={addManual}>Add</button>
+      </div>
+    </div>
+  </>);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MAIN APP
+// ══════════════════════════════════════════════════════════════
+function App() {
+  const [user,     setUser]     = useState(undefined);
+  const [recipes,  setRecipes]  = useState([]);
+  const [weekData, setWeekData] = useState(null);
+  const [weekKey,  setWeekKey]  = useState(toISOWeek(new Date()));
+  const [streak,   setStreak]   = useState(0);
+  const [view,     setView]     = useState('planner');
+  const [modal,    setModal]    = useState(null);
+  const [seeding,  setSeeding]  = useState(false);
+  const wdUnsub = useRef(null);
+
+  // Auth
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => setUser(u || null));
+    return unsub;
+  }, []);
+
+  // Recipes listener
+  useEffect(() => {
+    if (!user) { setRecipes([]); return; }
+    const unsub = rCol(user.uid).orderBy('name').onSnapshot(snap => {
+      const data = snap.docs.map(d=>({id:d.id,...d.data()}));
+      setRecipes(data);
+      if (data.length===0 && !seeding) seedRecipes(user.uid);
+    });
+    return unsub;
+  }, [user]);
+
+  // Week data listener
+  useEffect(() => {
+    if (!user) return;
+    if (wdUnsub.current) wdUnsub.current();
+    const unsub = wDoc(user.uid, weekKey).onSnapshot(snap => {
+      setWeekData(snap.exists ? snap.data() : { meals:{}, manualItems:[], shopChecked:{} });
+    });
+    wdUnsub.current = unsub;
+    return unsub;
+  }, [user, weekKey]);
+
+  // Streak
+  useEffect(() => {
+    if (!user) return;
+    stDoc(user.uid).get().then(s => { if(s.exists) setStreak(s.data().count||0); });
+  }, [user]);
+
+  async function seedRecipes(uid) {
+    setSeeding(true);
+    const batch = db.batch();
+    SEEDS.forEach(r => batch.set(rCol(uid).doc(), r));
+    await batch.commit();
+    setSeeding(false);
+  }
+
+  function shiftWeek(d) {
+    const s = weekStart(weekKey);
+    s.setUTCDate(s.getUTCDate() + d*7);
+    setWeekKey(toISOWeek(new Date(s)));
+  }
+
+  function slotKey(di, meal) { return `${di}_${meal.toLowerCase()}`; }
+  function getMeal(di, meal) { return weekData?.meals?.[slotKey(di,meal)] || null; }
+  function getRecipe(id)     { return recipes.find(r=>r.id===id) || null; }
+
+  async function setMeal(di, meal, recipeId) {
+    const key = slotKey(di, meal);
+    const meals = { ...(weekData?.meals||{}) };
+    if (recipeId) meals[key] = { recipeId, cooked: false };
+    else delete meals[key];
+    await wDoc(user.uid, weekKey).set({ ...(weekData||{}), meals }, { merge: true });
+  }
+
+  async function toggleCooked(di, meal) {
+    const key = slotKey(di, meal);
+    const slot = weekData?.meals?.[key];
+    if (!slot) return;
+    const meals = { ...weekData.meals, [key]: { ...slot, cooked: !slot.cooked } };
+    await wDoc(user.uid, weekKey).set({ ...weekData, meals }, { merge: true });
+  }
+
+  function calcScore() {
+    const all = weekData?.meals ? Object.values(weekData.meals) : [];
+    const planned = all.length, cooked = all.filter(s=>s.cooked).length;
+    const planPct = Math.round(planned/21*100);
+    const cookPct = planned>0 ? Math.round(cooked/planned*100) : 0;
+    return { planned, cooked, planPct, cookPct, score: Math.round(planPct*0.35+cookPct*0.65) };
+  }
+
+  function dailyCalories() {
+    return DAYS.map((_,di) => {
+      let total = 0;
+      MEALS.forEach(meal => {
+        const slot = getMeal(di, meal);
+        if (!slot) return;
+        const r = getRecipe(slot.recipeId);
+        if (r?.calories) total += r.calories;
+      });
+      return total;
+    });
+  }
+
+  async function saveRecipe(data, id) {
+    if (id) await rCol(user.uid).doc(id).set(data);
+    else await rCol(user.uid).add(data);
+    setModal(null);
+  }
+
+  async function deleteRecipe(id) {
+    if (!confirm('Delete this recipe?')) return;
+    await rCol(user.uid).doc(id).delete();
+    setModal(null);
+  }
+
+  // ── Loading / auth gate ──────────────────────────────────────
+  if (user === undefined) return <div className="loading-full"><span className="spinner"/><span>Loading…</span></div>;
+  if (!user) return <AuthScreen/>;
+
+  const sc = calcScore();
+  const calsByDay = dailyCalories();
+  const hasCals = calsByDay.some(c=>c>0);
+
+  return (
+    <div className="app-shell">
+      {/* Top bar */}
+      <div className="topbar">
+        <div className="topbar-logo">mise</div>
+        {streak>0 && <span className="streak-badge" style={{fontSize:'0.7rem',padding:'2px 8px'}}>🔥 {streak}w</span>}
+        <div className="topbar-spacer"/>
+        <div className="topbar-week">{weekKey}</div>
+        <div className="topbar-user">{user.displayName||user.email}</div>
+        <button className="btn btn-ghost btn-sm" onClick={()=>auth.signOut()}>Sign out</button>
+      </div>
+
+      <div className="main">
+        {/* View tabs */}
+        <div className="view-tabs">
+          <button className={`view-tab ${view==='planner'?'active':''}`}  onClick={()=>setView('planner')}>📅 Planner</button>
+          <button className={`view-tab ${view==='grocery'?'active':''}`}  onClick={()=>setView('grocery')}>🛒 Grocery</button>
+          <button className={`view-tab ${view==='recipes'?'active':''}`}  onClick={()=>setView('recipes')}>📖 Recipes</button>
+        </div>
+
+        {/* ── PLANNER ── */}
+        {view==='planner' && <>
+          <div className="week-nav">
+            <button className="btn btn-ghost btn-sm" onClick={()=>shiftWeek(-1)}>← Prev</button>
+            <div className="week-nav-label">{weekRange(weekKey)}</div>
+            <button className="btn btn-ghost btn-sm" onClick={()=>shiftWeek(1)}>Next →</button>
+          </div>
+
+          <div className="score-bar">
+            <div className="score-pill">
+              <div className="score-pill-label">Week Score</div>
+              <div className={`score-pill-value ${sc.score>=70?'c-accent2':sc.score>=40?'c-warn':'c-accent'}`}>
+                {sc.score}<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/100</span>
+              </div>
+              <div className="progress-bar-wrap"><div className="progress-bar-fill" style={{width:`${sc.score}%`,background:sc.score>=70?'var(--accent2)':sc.score>=40?'var(--warn)':'var(--accent)'}}/></div>
+            </div>
+            <div className="score-pill">
+              <div className="score-pill-label">Planned</div>
+              <div className="score-pill-value c-accent">{sc.planned}<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/21</span></div>
+              <div className="progress-bar-wrap"><div className="progress-bar-fill" style={{width:`${sc.planPct}%`,background:'var(--accent)'}}/></div>
+            </div>
+            <div className="score-pill">
+              <div className="score-pill-label">Cooked</div>
+              <div className="score-pill-value c-accent2">{sc.cooked}{sc.planned>0&&<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/{sc.planned}</span>}</div>
+              <div className="progress-bar-wrap"><div className="progress-bar-fill" style={{width:`${sc.cookPct}%`,background:'var(--accent2)'}}/></div>
+            </div>
+            {streak>0 && <div className="score-pill" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <div className="streak-badge">🔥 {streak} week{streak!==1?'s':''} streak</div>
+            </div>}
+          </div>
+
+          {/* Daily calorie pills */}
+          {hasCals && (
+            <div className="calorie-row">
+              {calsByDay.map((cal,di) => cal>0 ? (
+                <div key={di} className="calorie-pill">
+                  <span className="calorie-pill-day">{DAYS[di].slice(0,3)}</span>
+                  <span>{cal} kcal</span>
+                </div>
+              ) : null)}
+            </div>
+          )}
+
+          {/* Planner grid */}
+          <div className="planner-wrap">
+            <table className="planner-table">
+              <thead>
+                <tr>
+                  <th/>
+                  {MEALS.map((m,mi)=><th key={m}>{ICONS[mi]} {m}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {DAYS.map((day,di)=>{
+                  const isToday = dayDateStr(weekKey,di)===todayStr();
+                  return (
+                    <tr key={day}>
+                      <td>
+                        <div className={isToday?'today':''}>
+                          <div className="day-name">{day.slice(0,3)}</div>
+                          <div className="day-date">{dayDateStr(weekKey,di)}</div>
+                        </div>
+                      </td>
+                      {MEALS.map(meal=>{
+                        const slot   = getMeal(di, meal);
+                        const recipe = slot ? getRecipe(slot.recipeId) : null;
+                        return (
+                          <td key={meal}>
+                            <div
+                              className={`slot ${slot?'filled':'empty'} ${slot?.cooked?'cooked':''}`}
+                              onClick={()=>setModal({type:'picker', di, meal, currentId: slot?.recipeId||null})}
+                            >
+                              {recipe ? (<>
+                                <div className="slot-name">{recipe.name}</div>
+                                <div className="slot-meta">
+                                  {recipe.cuisine && <span>{recipe.cuisine}</span>}
+                                  {(recipe.prepTime||recipe.cookTime) ? <span> · {(recipe.prepTime||0)+(recipe.cookTime||0)}m</span> : null}
+                                </div>
+                                {recipe.calories>0 && <div className="slot-kcal">{recipe.calories} kcal</div>}
+                                <button
+                                  className="slot-btn"
+                                  onClick={e=>{ e.stopPropagation(); toggleCooked(di,meal); }}
+                                >{slot.cooked?'✓ cooked':'○ mark cooked'}</button>
+                              </>) : (<>
+                                <div className="slot-empty-icon">+</div>
+                                <div className="slot-empty-text">Add meal</div>
+                              </>)}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>}
+
+        {/* ── GROCERY ── */}
+        {view==='grocery' && (
+          <GroceryTab
+            recipes={recipes}
+            weekData={weekData}
+            weekKey={weekKey}
+            userId={user.uid}
+            wDoc={wDoc}
+          />
+        )}
+
+        {/* ── RECIPES ── */}
+        {view==='recipes' && <>
+          <div className="section-hd">
+            <div className="section-ttl">Recipe Library</div>
+            <button className="btn btn-primary btn-sm" onClick={()=>setModal({type:'recipeForm'})}>+ New recipe</button>
+          </div>
+          {recipes.length===0 && <div className="empty-state">{seeding?'Loading seed recipes…':'No recipes yet. Add one!'}</div>}
+          <div className="recipe-grid">
+            {recipes.map(r=>(
+              <div key={r.id} className="recipe-card" onClick={()=>setModal({type:'recipeDetail',recipe:r})}>
+                <div className="recipe-card-name">{r.name}</div>
+                <div className="recipe-card-meta">
+                  {r.cuisine && <span>{r.cuisine}</span>}
+                  {(r.prepTime||r.cookTime) ? <span>{(r.prepTime||0)+(r.cookTime||0)} min</span> : null}
+                  {r.calories>0 && <span style={{color:'var(--accent2)',fontWeight:600}}>{r.calories} kcal</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>}
+      </div>
+
+      {/* ── MODALS ── */}
+      {modal?.type==='picker' && (
+        <MealPickerModal
+          recipes={recipes}
+          currentId={modal.currentId}
+          onPick={r=>{ setMeal(modal.di, modal.meal, r.id); setModal(null); }}
+          onClear={()=>{ setMeal(modal.di, modal.meal, null); setModal(null); }}
+          onClose={()=>setModal(null)}
+        />
+      )}
+      {modal?.type==='recipeForm' && (
+        <RecipeFormModal
+          initial={modal.recipe}
+          onSave={data=>saveRecipe(data, modal.recipe?.id)}
+          onClose={()=>setModal(null)}
+        />
+      )}
+      {modal?.type==='recipeDetail' && (
+        <RecipeDetailModal
+          recipe={modal.recipe}
+          onEdit={()=>setModal({type:'recipeForm', recipe:modal.recipe})}
+          onDelete={()=>deleteRecipe(modal.recipe.id)}
+          onClose={()=>setModal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ENTRY
+// ══════════════════════════════════════════════════════════════
+function Root() {
+  if (!IS_CONFIGURED) return <SetupScreen/>;
+  return <App/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+</body>
+</html>
