@@ -5,43 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Mise — Weekly Meal Planner</title>
 
-<!-- ═══════════════════════════════════════════════════════════
-     FIREBASE SETUP INSTRUCTIONS
-     ───────────────────────────────────────────────────────────
-     1. Go to https://console.firebase.google.com
-     2. Create a new project (or use existing)
-     3. Enable Authentication → Sign-in method → Google (recommended) AND Email/Password
-        For Google: set a support email, save.
-     4. Enable Firestore Database (start in production mode)
-     5. In Firestore → Rules, paste:
-
-        rules_version = '2';
-        service cloud.firestore {
-          match /databases/{database}/documents {
-            match /users/{uid}/{document=**} {
-              allow read, write: if request.auth != null && request.auth.uid == uid;
-            }
-          }
-        }
-
-     6. Go to Project Settings → General → Your apps → Add web app
-     7. Copy the firebaseConfig object and paste it below
-     ═══════════════════════════════════════════════════════════ -->
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
-// ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyA2h-53JKoYSdf3q6H0IG1Y1eE6JqYH7y8",
-  authDomain: "raba22-mise.firebaseapp.com",
-  projectId: "raba22-mise",
-  storageBucket: "raba22-mise.firebasestorage.app",
+// ── FIREBASE CONFIG ───────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyA2h-53JKoYSdf3q6H0IG1Y1eE6JqYH7y8",
+  authDomain:        "raba22-mise.firebaseapp.com",
+  projectId:         "raba22-mise",
+  storageBucket:     "raba22-mise.firebasestorage.app",
   messagingSenderId: "587252732379",
-  appId: "1:587252732379:web:b9c3e9cd178ad786bb97fe",
-  measurementId: "G-VH344J32XG"
+  appId:             "1:587252732379:web:b9c3e9cd178ad786bb97fe",
+  measurementId:     "G-VH344J32XG"
 };
 // ─────────────────────────────────────────────────────────────
 
@@ -325,46 +302,6 @@ const SEEDS = [
 ];
 
 // ══════════════════════════════════════════════════════════════
-//  SETUP SCREEN
-// ══════════════════════════════════════════════════════════════
-function SetupScreen() {
-  return (
-    <div className="setup-wrap">
-      <div className="setup-box">
-        <div style={{textAlign:'center',marginBottom:28}}>
-          <div style={{fontSize:'2.6rem',fontWeight:900,color:'var(--accent)',letterSpacing:'-1px'}}>mise</div>
-          <div style={{color:'var(--muted)',marginTop:4,fontSize:'0.83rem'}}>Firebase is not configured yet</div>
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,marginBottom:18}}>One-time setup — 5 minutes</div>
-          {[
-            ['Go to', <><a href="https://console.firebase.google.com" target="_blank" style={{color:'var(--accent)'}}>console.firebase.google.com</a> and create a new project</>],
-            ['Auth', 'Enable Authentication → Sign-in method → Google (set a support email, save). Also enable Email/Password for the fallback form.'],
-            ['Firestore', 'Enable Firestore Database (production mode). In Rules, paste:'],
-            ['Web app', 'Project Settings → General → Your apps → Add web app → copy the config'],
-            ['Paste config', 'Open this mise.html file in a text editor, find FIREBASE_CONFIG near the top, paste your values, save and refresh.'],
-          ].map(([n,t],i)=>(
-            <div className="setup-step" key={i}>
-              <div className="setup-num">{i+1}</div>
-              <p><strong>{n}: </strong>{t}</p>
-            </div>
-          ))}
-          <pre className="setup-code">{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == uid;
-    }
-  }
-}`}</pre>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════
 //  AUTH SCREEN
 // ══════════════════════════════════════════════════════════════
 function AuthScreen() {
@@ -600,12 +537,11 @@ function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  GROCERY TAB  (proper component to allow useState)
+//  GROCERY TAB
 // ══════════════════════════════════════════════════════════════
 function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
   const [manualInput, setManualInput] = useState('');
 
-  // Build recipe map from planned meals
   const recipeMap = new Map();
   if (weekData?.meals) {
     Object.values(weekData.meals).forEach(slot => {
@@ -649,7 +585,6 @@ function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
       <div className="empty-state">No meals planned this week yet.<br/>Head to the Planner tab to add some.</div>
     )}
 
-    {/* Per-recipe ingredient sections */}
     {[...recipeMap.values()].map(recipe=>(
       <div key={recipe.id}>
         <div className="shop-section-title">{recipe.name}</div>
@@ -668,7 +603,6 @@ function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
       </div>
     ))}
 
-    {/* Manual items */}
     <div>
       <div className="shop-section-title">Added manually</div>
       {(weekData?.manualItems||[]).map(it=>(
@@ -998,12 +932,7 @@ function App() {
 // ══════════════════════════════════════════════════════════════
 //  ENTRY
 // ══════════════════════════════════════════════════════════════
-function Root() {
-  if (!IS_CONFIGURED) return <SetupScreen/>;
-  return <App/>;
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
