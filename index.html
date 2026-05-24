@@ -154,6 +154,9 @@ if (IS_CONFIGURED) {
   .slot-kcal { font-size: 0.62rem; color: var(--accent2); font-weight: 600; margin-top: 1px; }
   .slot-btn  { margin-top: 6px; padding: 3px 8px; font-size: 0.68rem; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
   .slot-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .slot-clear { position: absolute; top: 5px; right: 7px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; line-height: 1; padding: 3px 5px; border-radius: 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; z-index: 2; }
+  .slot.filled:hover .slot-clear { opacity: 1; }
+  .slot-clear:hover { color: var(--danger) !important; background: rgba(224,92,92,0.12); }
 
   /* Modal */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
@@ -537,6 +540,50 @@ function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  SLOT ACTION MODAL
+// ══════════════════════════════════════════════════════════════
+function SlotActionModal({ recipe, slot, onToggleCooked, onChangeRecipe, onViewRecipe, onClear, onClose }) {
+  const total = (recipe.prepTime||0)+(recipe.cookTime||0);
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal modal-sm">
+        <div className="modal-hd">
+          <div style={{flex:1}}>
+            <div className="modal-title">{recipe.name}</div>
+            <div style={{fontSize:'0.72rem',color:'var(--muted)',marginTop:3}}>
+              {[recipe.cuisine, total>0&&`${total} min`, recipe.calories>0&&`${recipe.calories} kcal`].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-bd">
+          <button
+            className={`btn ${slot.cooked?'btn-secondary':'btn-primary'}`}
+            style={{width:'100%',justifyContent:'center',marginBottom:8}}
+            onClick={onToggleCooked}
+          >
+            {slot.cooked?'✓ Marked as cooked':'○ Mark as cooked'}
+          </button>
+          <button className="btn btn-secondary" style={{width:'100%',justifyContent:'center',marginBottom:8}} onClick={onViewRecipe}>
+            📖 View recipe
+          </button>
+          <button className="btn btn-secondary" style={{width:'100%',justifyContent:'center',marginBottom:16}} onClick={onChangeRecipe}>
+            🔄 Change recipe
+          </button>
+          <button
+            className="btn btn-ghost"
+            style={{width:'100%',justifyContent:'center',color:'var(--danger)',borderColor:'rgba(224,92,92,0.3)'}}
+            onClick={onClear}
+          >
+            ✕ Clear slot
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 //  GROCERY TAB
 // ══════════════════════════════════════════════════════════════
 function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
@@ -693,18 +740,19 @@ function App() {
 
   async function setMeal(di, meal, recipeId) {
     const key = slotKey(di, meal);
-    const meals = { ...(weekData?.meals||{}) };
-    if (recipeId) meals[key] = { recipeId, cooked: false };
-    else delete meals[key];
-    await wDoc(user.uid, weekKey).set({ ...(weekData||{}), meals }, { merge: true });
+    const docRef = wDoc(user.uid, weekKey);
+    if (recipeId) {
+      await docRef.set({ meals: { [key]: { recipeId, cooked: false } } }, { merge: true });
+    } else {
+      await docRef.update({ [`meals.${key}`]: firebase.firestore.FieldValue.delete() });
+    }
   }
 
   async function toggleCooked(di, meal) {
     const key = slotKey(di, meal);
     const slot = weekData?.meals?.[key];
     if (!slot) return;
-    const meals = { ...weekData.meals, [key]: { ...slot, cooked: !slot.cooked } };
-    await wDoc(user.uid, weekKey).set({ ...weekData, meals }, { merge: true });
+    await wDoc(user.uid, weekKey).update({ [`meals.${key}.cooked`]: !slot.cooked });
   }
 
   function calcScore() {
@@ -838,19 +886,23 @@ function App() {
                           <td key={meal}>
                             <div
                               className={`slot ${slot?'filled':'empty'} ${slot?.cooked?'cooked':''}`}
-                              onClick={()=>setModal({type:'picker', di, meal, currentId: slot?.recipeId||null})}
+                              onClick={()=> slot
+                                ? setModal({type:'slotAction', di, meal})
+                                : setModal({type:'picker', di, meal, currentId: null})
+                              }
                             >
                               {recipe ? (<>
+                                <button
+                                  className="slot-clear"
+                                  onClick={e=>{ e.stopPropagation(); setMeal(di, meal, null); }}
+                                  title="Clear slot"
+                                >✕</button>
                                 <div className="slot-name">{recipe.name}</div>
                                 <div className="slot-meta">
                                   {recipe.cuisine && <span>{recipe.cuisine}</span>}
                                   {(recipe.prepTime||recipe.cookTime) ? <span> · {(recipe.prepTime||0)+(recipe.cookTime||0)}m</span> : null}
                                 </div>
                                 {recipe.calories>0 && <div className="slot-kcal">{recipe.calories} kcal</div>}
-                                <button
-                                  className="slot-btn"
-                                  onClick={e=>{ e.stopPropagation(); toggleCooked(di,meal); }}
-                                >{slot.cooked?'✓ cooked':'○ mark cooked'}</button>
                               </>) : (<>
                                 <div className="slot-empty-icon">+</div>
                                 <div className="slot-empty-text">Add meal</div>
@@ -901,6 +953,22 @@ function App() {
       </div>
 
       {/* ── MODALS ── */}
+      {modal?.type==='slotAction' && (()=>{
+        const slot   = weekData?.meals?.[slotKey(modal.di, modal.meal)];
+        const recipe = slot ? getRecipe(slot.recipeId) : null;
+        if (!slot || !recipe) return null;
+        return (
+          <SlotActionModal
+            recipe={recipe}
+            slot={slot}
+            onToggleCooked={()=>{ toggleCooked(modal.di, modal.meal); setModal(null); }}
+            onViewRecipe={()=>setModal({type:'recipeDetail', recipe, fromSlot:{di:modal.di, meal:modal.meal}})}
+            onChangeRecipe={()=>setModal({type:'picker', di:modal.di, meal:modal.meal, currentId:slot.recipeId})}
+            onClear={()=>{ setMeal(modal.di, modal.meal, null); setModal(null); }}
+            onClose={()=>setModal(null)}
+          />
+        );
+      })()}
       {modal?.type==='picker' && (
         <MealPickerModal
           recipes={recipes}
@@ -922,7 +990,10 @@ function App() {
           recipe={modal.recipe}
           onEdit={()=>setModal({type:'recipeForm', recipe:modal.recipe})}
           onDelete={()=>deleteRecipe(modal.recipe.id)}
-          onClose={()=>setModal(null)}
+          onClose={()=> modal.fromSlot
+            ? setModal({type:'slotAction', di:modal.fromSlot.di, meal:modal.fromSlot.meal})
+            : setModal(null)
+          }
         />
       )}
     </div>
