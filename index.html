@@ -216,6 +216,33 @@ if (IS_CONFIGURED) {
   .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   select option { background: var(--surface); }
+  /* Landing page */
+  @keyframes float-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-24px) scale(1.06); } }
+  @keyframes float-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-18px,18px) scale(0.95); } }
+  @keyframes fade-up { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: translateY(0); } }
+  .orb-a { animation: float-a 14s ease-in-out infinite; }
+  .orb-b { animation: float-b 18s ease-in-out infinite; }
+  .land-in { animation: fade-up 0.55s ease both; }
+  .land-logo {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .land-google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; max-width: 320px; margin: 0 auto;
+    padding: 14px 24px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--card);
+    color: var(--text); font-size: 0.92rem; font-weight: 700;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .land-google-btn:hover:not(:disabled) { border-color: #4285F4; background: rgba(66,133,244,0.07); transform: translateY(-1px); }
+  .land-google-btn:active:not(:disabled) { transform: translateY(0); }
+  .land-google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .land-feature { display:flex; align-items:flex-start; gap:12px; text-align:left; }
+  .land-feature-icon { font-size:1.4rem; flex-shrink:0; margin-top:2px; }
+  .land-feature-title { font-size:0.82rem; font-weight:700; margin-bottom:3px; }
+  .land-feature-desc { font-size:0.75rem; color:var(--muted); line-height:1.55; }
+
   /* Past days */
   .past-day { opacity: 0.45; }
   .past-day .slot.empty { pointer-events: none; }
@@ -248,6 +275,8 @@ if (IS_CONFIGURED) {
     .score-pill { min-width: 0; }
     .week-actions { flex-direction: column; align-items: stretch; }
     .week-actions .btn { justify-content: center; }
+    .land-logo { font-size: 3rem !important; }
+    .land-feature-grid { grid-template-columns: 1fr !important; }
   }
 </style>
 </head>
@@ -341,13 +370,9 @@ const SEEDS = [
 ];
 
 // ══════════════════════════════════════════════════════════════
-//  AUTH SCREEN
+//  LANDING / AUTH SCREEN
 // ══════════════════════════════════════════════════════════════
 function AuthScreen() {
-  const [tab,  setTab]  = useState('login');
-  const [email,setEmail]= useState('');
-  const [pass, setPass] = useState('');
-  const [name, setName] = useState('');
   const [err,  setErr]  = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -361,56 +386,68 @@ function AuthScreen() {
     } finally { setBusy(false); }
   }
 
-  async function submit(e) {
-    e.preventDefault(); setErr(''); setBusy(true);
-    try {
-      if (tab === 'login') {
-        await auth.signInWithEmailAndPassword(email, pass);
-      } else {
-        const c = await auth.createUserWithEmailAndPassword(email, pass);
-        if (name) await c.user.updateProfile({ displayName: name });
-      }
-    } catch(ex) { setErr(ex.message); }
-    finally { setBusy(false); }
-  }
+  const features = [
+    { icon:'📅', title:'Weekly planner', desc:'Map out all 21 meals across the week. Visualise your days at a glance.' },
+    { icon:'🛒', title:'Auto grocery list', desc:'Your shopping list builds itself from whatever you\'ve planned to cook.' },
+    { icon:'📖', title:'Recipe library', desc:'Save your go-to recipes with ingredients, method, and calorie counts.' },
+    { icon:'🔥', title:'Cook streaks', desc:'Build a habit. Track how consistently you\'re cooking what you plan.' },
+  ];
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-box">
-        <div className="auth-logo">mise</div>
-        <div className="auth-sub">Weekly meal planning, made simple</div>
-        <div className="card">
-          {/* Google sign-in */}
-          <button className="btn-google" onClick={signInGoogle} disabled={busy}>
-            <svg width="18" height="18" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            </svg>
-            {busy ? <span className="spinner" style={{width:16,height:16}}/> : 'Continue with Google'}
-          </button>
+    <div style={{minHeight:'100vh',background:'var(--bg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',position:'relative',overflow:'hidden'}}>
 
-          <div className="auth-divider"><span>or</span></div>
+      {/* Ambient background orbs */}
+      <div className="orb-a" style={{position:'absolute',top:'-15%',left:'-8%',width:'520px',height:'520px',background:'radial-gradient(circle, rgba(124,106,247,0.13) 0%, transparent 68%)',pointerEvents:'none'}}/>
+      <div className="orb-b" style={{position:'absolute',bottom:'-12%',right:'-6%',width:'440px',height:'440px',background:'radial-gradient(circle, rgba(86,207,178,0.09) 0%, transparent 68%)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',top:'40%',right:'15%',width:'260px',height:'260px',background:'radial-gradient(circle, rgba(124,106,247,0.06) 0%, transparent 70%)',pointerEvents:'none'}}/>
 
-          <div className="auth-tabs">
-            {['login','signup'].map(t=>(
-              <div key={t} className={`auth-tab ${tab===t?'active':''}`} onClick={()=>setTab(t)}>
-                {t==='login'?'Sign in with email':'Create account'}
-              </div>
-            ))}
+      <div style={{position:'relative',width:'100%',maxWidth:540,display:'flex',flexDirection:'column',alignItems:'center'}}>
+
+        {/* Brand */}
+        <div className="land-in" style={{animationDelay:'0ms',textAlign:'center',marginBottom:32}}>
+          <div style={{display:'inline-flex',alignItems:'baseline',gap:10,marginBottom:6}}>
+            <span className="land-logo" style={{fontSize:'3.8rem',fontWeight:900,letterSpacing:'-2px',lineHeight:1}}>mise</span>
+            <span style={{fontSize:'0.8rem',fontWeight:700,letterSpacing:'0.2em',textTransform:'uppercase',color:'var(--muted)',paddingBottom:4}}>en place</span>
           </div>
-          {err && <div className="auth-error">{err}</div>}
-          <form onSubmit={submit}>
-            {tab==='signup' && <div className="field"><label>Name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" autoFocus/></div>}
-            <div className="field"><label>Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" required autoFocus={tab==='login'}/></div>
-            <div className="field"><label>Password</label><input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder={tab==='signup'?'Min 6 characters':'Password'} required/></div>
-            <button type="submit" className="btn btn-secondary" style={{width:'100%',justifyContent:'center'}} disabled={busy}>
-              {busy?<span className="spinner"/>:(tab==='login'?'Sign in':'Create account')}
-            </button>
-          </form>
+          <div style={{fontSize:'1.55rem',fontWeight:800,letterSpacing:'-0.5px',lineHeight:1.3,marginBottom:12}}>
+            Plan your week.<br/>Cook with intention.
+          </div>
+          <div style={{fontSize:'0.88rem',color:'var(--muted)',lineHeight:1.75,maxWidth:380,margin:'0 auto'}}>
+            A calm, focused space to plan every meal, track your cooking, and shop without thinking twice.
+          </div>
         </div>
-        <div style={{textAlign:'center',color:'var(--muted)',fontSize:'0.72rem',marginTop:18}}>Your data is private and stored securely in the cloud.</div>
+
+        {/* Feature grid */}
+        <div className="land-in land-feature-grid" style={{animationDelay:'80ms',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,width:'100%',marginBottom:36}}>
+          {features.map(f=>(
+            <div key={f.title} className="land-feature" style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:10,padding:'14px 16px'}}>
+              <div className="land-feature-icon">{f.icon}</div>
+              <div>
+                <div className="land-feature-title">{f.title}</div>
+                <div className="land-feature-desc">{f.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sign-in */}
+        <div className="land-in" style={{animationDelay:'160ms',width:'100%',display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
+          {err && <div className="auth-error" style={{width:'100%',maxWidth:320,textAlign:'center'}}>{err}</div>}
+          <button className="land-google-btn" onClick={signInGoogle} disabled={busy}>
+            {busy
+              ? <span className="spinner" style={{width:20,height:20}}/>
+              : <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+            }
+            {busy ? 'Signing in…' : 'Continue with Google'}
+          </button>
+          <div style={{fontSize:'0.7rem',color:'var(--muted)'}}>Your data is private and only visible to you.</div>
+        </div>
+
       </div>
     </div>
   );
