@@ -216,10 +216,38 @@ if (IS_CONFIGURED) {
   .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   select option { background: var(--surface); }
-  @media (max-width: 600px) {
+  /* Past days */
+  .past-day { opacity: 0.45; }
+  .past-day .slot.empty { pointer-events: none; }
+
+  /* Score tooltip */
+  .score-info { position: relative; display: inline-flex; align-items: center; margin-left: 5px; cursor: default; vertical-align: middle; }
+  .score-tip { visibility: hidden; opacity: 0; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.72rem; color: var(--muted); white-space: nowrap; z-index: 30; transition: opacity 0.15s; pointer-events: none; line-height: 1.8; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+  .score-info:hover .score-tip { visibility: visible; opacity: 1; }
+
+  /* Mobile day cards */
+  .desktop-planner { display: block; }
+  .mobile-planner  { display: none; }
+  .day-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+  .day-card-hd { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .day-card-hd.today .day-name { color: var(--accent); }
+  .day-card-hd.today .day-date { color: var(--accent); opacity: 0.7; }
+  .day-card-meals { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .day-card-meal-label { font-size: 0.68rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+  @media (max-width: 640px) {
     .two-col, .three-col { grid-template-columns: 1fr; }
     .main { padding: 14px; }
     .topbar { padding: 0 14px; }
+    .topbar-week { display: none; }
+    .topbar-user { max-width: 110px; }
+    .desktop-planner { display: none; }
+    .mobile-planner  { display: block; }
+    .view-tabs { width: 100%; }
+    .view-tab  { flex: 1; text-align: center; padding: 6px 6px; font-size: 0.75rem; }
+    .score-pill { min-width: 0; }
+    .week-actions { flex-direction: column; align-items: stretch; }
+    .week-actions .btn { justify-content: center; }
   }
 </style>
 </head>
@@ -267,6 +295,14 @@ function dayDateStr(wk, di) {
 
 function todayStr() {
   return new Date().toLocaleDateString('en-AU',{month:'short',day:'numeric'});
+}
+
+function isPastDay(wk, di) {
+  const d = new Date(weekStart(wk));
+  d.setUTCDate(d.getUTCDate() + di);
+  const t = new Date();
+  const todayUTC = new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()));
+  return d < todayUTC;
 }
 
 function uid() { return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
@@ -788,6 +824,66 @@ function App() {
     setModal(null);
   }
 
+  async function autoFill() {
+    if (recipes.length === 0) return;
+    const newMeals = {};
+    DAYS.forEach((_, di) => {
+      MEALS.forEach(meal => {
+        const key = slotKey(di, meal);
+        if (!weekData?.meals?.[key]) {
+          const r = recipes[Math.floor(Math.random() * recipes.length)];
+          newMeals[key] = { recipeId: r.id, cooked: false };
+        }
+      });
+    });
+    if (Object.keys(newMeals).length > 0)
+      await wDoc(user.uid, weekKey).set({ meals: newMeals }, { merge: true });
+  }
+
+  async function copyLastWeek() {
+    const s = weekStart(weekKey);
+    s.setUTCDate(s.getUTCDate() - 7);
+    const prevWk = toISOWeek(new Date(s));
+    const snap = await wDoc(user.uid, prevWk).get();
+    if (!snap.exists) return alert('No plan found for last week.');
+    const prevMeals = snap.data()?.meals || {};
+    if (Object.keys(prevMeals).length === 0) return alert('Last week had no meals planned.');
+    const newMeals = {};
+    Object.entries(prevMeals).forEach(([key, slot]) => {
+      if (!weekData?.meals?.[key])
+        newMeals[key] = { recipeId: slot.recipeId, cooked: false };
+    });
+    if (Object.keys(newMeals).length > 0)
+      await wDoc(user.uid, weekKey).set({ meals: newMeals }, { merge: true });
+  }
+
+  function renderSlot(di, meal) {
+    const slot   = getMeal(di, meal);
+    const recipe = slot ? getRecipe(slot.recipeId) : null;
+    return (
+      <div
+        className={`slot ${slot?'filled':'empty'} ${slot?.cooked?'cooked':''}`}
+        onClick={()=> slot
+          ? setModal({type:'slotAction', di, meal})
+          : setModal({type:'picker', di, meal, currentId: null})
+        }
+      >
+        {recipe ? (<>
+          <button className="slot-clear" onClick={e=>{ e.stopPropagation(); setMeal(di, meal, null); }} title="Clear slot">✕</button>
+          <div className="slot-name">{recipe.name}</div>
+          <div className="slot-meta">
+            {recipe.cuisine && <span>{recipe.cuisine}</span>}
+            {(recipe.prepTime||recipe.cookTime) ? <span> · {(recipe.prepTime||0)+(recipe.cookTime||0)}m</span> : null}
+          </div>
+          {recipe.calories>0 && <div className="slot-kcal">{recipe.calories} kcal</div>}
+        </>) : (<>
+          <div className="slot-empty-icon">+</div>
+          <div className="slot-empty-text">Add meal</div>
+        </>)}
+      </div>
+    );
+  }
+
   // ── Loading / auth gate ──────────────────────────────────────
   if (user === undefined) return <div className="loading-full"><span className="spinner"/><span>Loading…</span></div>;
   if (!user) return <AuthScreen/>;
@@ -823,10 +919,22 @@ function App() {
             <div className="week-nav-label">{weekRange(weekKey)}</div>
             <button className="btn btn-ghost btn-sm" onClick={()=>shiftWeek(1)}>Next →</button>
           </div>
+          <div className="week-actions" style={{display:'flex',gap:8,marginBottom:18,justifyContent:'flex-end'}}>
+            <button className="btn btn-ghost btn-sm" onClick={copyLastWeek} title="Copy last week's meals into empty slots">↩ Copy last week</button>
+            <button className="btn btn-ghost btn-sm" onClick={autoFill} title="Randomly fill empty slots from your recipe library">⚡ Auto-fill empty</button>
+          </div>
 
           <div className="score-bar">
             <div className="score-pill">
-              <div className="score-pill-label">Week Score</div>
+              <div className="score-pill-label">
+                Week Score
+                <span className="score-info">
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style={{color:'var(--muted)'}}>
+                    <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm0 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 3.75a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm0 2.5a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0V8.5A.75.75 0 0 1 8 7.75z"/>
+                  </svg>
+                  <span className="score-tip">35% from meals planned (/21)<br/>65% from meals cooked</span>
+                </span>
+              </div>
               <div className={`score-pill-value ${sc.score>=70?'c-accent2':sc.score>=40?'c-warn':'c-accent'}`}>
                 {sc.score}<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/100</span>
               </div>
@@ -859,8 +967,8 @@ function App() {
             </div>
           )}
 
-          {/* Planner grid */}
-          <div className="planner-wrap">
+          {/* Desktop planner grid */}
+          <div className="planner-wrap desktop-planner">
             <table className="planner-table">
               <thead>
                 <tr>
@@ -871,51 +979,47 @@ function App() {
               <tbody>
                 {DAYS.map((day,di)=>{
                   const isToday = dayDateStr(weekKey,di)===todayStr();
+                  const past    = isPastDay(weekKey,di) && !isToday;
                   return (
-                    <tr key={day}>
+                    <tr key={day} className={past?'past-day':''}>
                       <td>
                         <div className={isToday?'today':''}>
                           <div className="day-name">{day.slice(0,3)}</div>
                           <div className="day-date">{dayDateStr(weekKey,di)}</div>
                         </div>
                       </td>
-                      {MEALS.map(meal=>{
-                        const slot   = getMeal(di, meal);
-                        const recipe = slot ? getRecipe(slot.recipeId) : null;
-                        return (
-                          <td key={meal}>
-                            <div
-                              className={`slot ${slot?'filled':'empty'} ${slot?.cooked?'cooked':''}`}
-                              onClick={()=> slot
-                                ? setModal({type:'slotAction', di, meal})
-                                : setModal({type:'picker', di, meal, currentId: null})
-                              }
-                            >
-                              {recipe ? (<>
-                                <button
-                                  className="slot-clear"
-                                  onClick={e=>{ e.stopPropagation(); setMeal(di, meal, null); }}
-                                  title="Clear slot"
-                                >✕</button>
-                                <div className="slot-name">{recipe.name}</div>
-                                <div className="slot-meta">
-                                  {recipe.cuisine && <span>{recipe.cuisine}</span>}
-                                  {(recipe.prepTime||recipe.cookTime) ? <span> · {(recipe.prepTime||0)+(recipe.cookTime||0)}m</span> : null}
-                                </div>
-                                {recipe.calories>0 && <div className="slot-kcal">{recipe.calories} kcal</div>}
-                              </>) : (<>
-                                <div className="slot-empty-icon">+</div>
-                                <div className="slot-empty-text">Add meal</div>
-                              </>)}
-                            </div>
-                          </td>
-                        );
-                      })}
+                      {MEALS.map(meal=>(
+                        <td key={meal}>{renderSlot(di, meal)}</td>
+                      ))}
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile planner cards */}
+          <div className="mobile-planner">
+            {DAYS.map((day,di)=>{
+              const isToday = dayDateStr(weekKey,di)===todayStr();
+              const past    = isPastDay(weekKey,di) && !isToday;
+              return (
+                <div key={day} className={`day-card ${past?'past-day':''}`}>
+                  <div className={`day-card-hd ${isToday?'today':''}`}>
+                    <div className="day-name">{day}</div>
+                    <div className="day-date">{dayDateStr(weekKey,di)}</div>
+                  </div>
+                  <div className="day-card-meals">
+                    {MEALS.map((meal,mi)=>(
+                      <div key={meal}>
+                        <div className="day-card-meal-label">{ICONS[mi]} {meal}</div>
+                        {renderSlot(di, meal)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </>}
 
