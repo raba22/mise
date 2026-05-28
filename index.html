@@ -343,35 +343,35 @@ function targetBMI(currentBMI) {
 function targetWeight(bmiTarget, height) { return Math.round(bmiTarget * Math.pow(height/100,2) * 10)/10; }
 
 // ── Firestore refs ─────────────────────────────────────────────
-const rCol   = u => db.collection('users').doc(u).collection('recipes');
+const rCol   = () => db.collection('recipes');           // global catalogue
 const wDoc   = (u,wk) => db.collection('users').doc(u).collection('weeks').doc(wk);
 const stDoc  = u => db.collection('users').doc(u).collection('meta').doc('streak');
 const prDoc  = u => db.collection('users').doc(u).collection('meta').doc('profile');
 
 // ── Seed recipes ───────────────────────────────────────────────
 const SEEDS = [
-  { name:'Pasta Napolitana',  cuisine:'Italian',      prepTime:5,  cookTime:20, servings:2, calories:480,
+  { name:'Pasta Napolitana',  cuisine:'Italian',      prepTime:5,  cookTime:20, servings:2, calories:480, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'pasta',qty:'400',unit:'g'},{item:'garlic',qty:'2',unit:'cloves'},{item:'crushed tomatoes',qty:'1',unit:'can'},{item:'fresh basil',qty:'handful',unit:''},{item:'olive oil',qty:'2',unit:'tbsp'}],
     method:'Sauté garlic in olive oil. Add tomatoes, simmer 15 min. Cook pasta, combine, top with basil.' },
-  { name:'Pongal',            cuisine:'South Indian', prepTime:5,  cookTime:20, servings:2, calories:390,
+  { name:'Pongal',            cuisine:'South Indian', prepTime:5,  cookTime:20, servings:2, calories:390, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'rice',qty:'1',unit:'cup'},{item:'moong dhal',qty:'1/4',unit:'cup'},{item:'ghee',qty:'2',unit:'tbsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'black pepper',qty:'1',unit:'tsp'},{item:'cashews',qty:'10',unit:''},{item:'ginger',qty:'1',unit:'inch'}],
     method:'Fry pepper, jeera, cashews in ghee. Boil rice and moong dhal together until mushy. Mix.' },
-  { name:'Chole',             cuisine:'Indian',       prepTime:10, cookTime:40, servings:4, calories:320,
+  { name:'Chole',             cuisine:'Indian',       prepTime:10, cookTime:40, servings:4, calories:320, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'chickpeas, soaked overnight',qty:'1',unit:'cup'},{item:'onions',qty:'2',unit:''},{item:'tomato',qty:'1',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'garam masala',qty:'1',unit:'tsp'},{item:'chilli powder',qty:'1',unit:'tsp'},{item:'oil',qty:'2',unit:'tbsp'}],
     method:'Pressure cook chickpeas. Sauté onions, masalas, tomato. Add chickpeas, simmer 15 min.' },
-  { name:'Laksa',             cuisine:'Malaysian',    prepTime:10, cookTime:20, servings:2, calories:560,
+  { name:'Laksa',             cuisine:'Malaysian',    prepTime:10, cookTime:20, servings:2, calories:560, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'dry noodles',qty:'200',unit:'g'},{item:'fried tofu',qty:'200',unit:'g'},{item:'coconut milk',qty:'400',unit:'ml'},{item:'laksa paste',qty:'3',unit:'tbsp'},{item:'garlic',qty:'6',unit:'cloves'},{item:'spring onions',qty:'2',unit:''}],
     method:'Make paste. Pan-fry tofu. Boil noodles. Build coconut broth with paste, add everything.' },
-  { name:'Spinach Curry',     cuisine:'Indian',       prepTime:5,  cookTime:15, servings:2, calories:210,
+  { name:'Spinach Curry',     cuisine:'Indian',       prepTime:5,  cookTime:15, servings:2, calories:210, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'spinach',qty:'2',unit:'cups'},{item:'onion',qty:'1',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'oil',qty:'2',unit:'tbsp'}],
     method:'Temper jeera, fry onion golden, add spinach, cook till water evaporates.' },
-  { name:'Chia Pudding',      cuisine:'Healthy',      prepTime:5,  cookTime:0,  servings:1, calories:280,
+  { name:'Chia Pudding',      cuisine:'Healthy',      prepTime:5,  cookTime:0,  servings:1, calories:280, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'chia seeds',qty:'3',unit:'tbsp'},{item:'almond milk',qty:'200',unit:'ml'},{item:'honey',qty:'1',unit:'tsp'}],
     method:'Mix all, refrigerate overnight, top with fruit.' },
-  { name:'Poha',              cuisine:'Indian',       prepTime:5,  cookTime:10, servings:2, calories:250,
+  { name:'Poha',              cuisine:'Indian',       prepTime:5,  cookTime:10, servings:2, calories:250, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'flattened rice',qty:'2',unit:'cups'},{item:'onion',qty:'1',unit:''},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'turmeric',qty:'1/4',unit:'tsp'},{item:'lemon juice',qty:'1',unit:'tbsp'}],
     method:'Soak poha 5 min. Temper spices, add onion. Add poha with turmeric, finish with lemon.' },
-  { name:'Green Grams Sundal',cuisine:'South Indian', prepTime:5,  cookTime:15, servings:2, calories:190,
+  { name:'Green Grams Sundal',cuisine:'South Indian', prepTime:5,  cookTime:15, servings:2, calories:190, createdBy:'system', createdByName:'mise', planCount:0,
     ingredients:[{item:'whole green moong',qty:'1',unit:'cup'},{item:'grated coconut',qty:'3',unit:'tbsp'},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'curry leaves',qty:'1',unit:'sprig'},{item:'green chillies',qty:'2',unit:''}],
     method:'Cook moong till soft. Temper spices, add moong and coconut.' },
 ];
@@ -781,22 +781,30 @@ function MealPickerModal({ recipes, currentId, calBudget, onPick, onClear, onClo
 // ══════════════════════════════════════════════════════════════
 //  RECIPE DETAIL MODAL
 // ══════════════════════════════════════════════════════════════
-function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
+function RecipeDetailModal({ recipe, canEdit, onEdit, onDelete, onClose }) {
   const total=(recipe.prepTime||0)+(recipe.cookTime||0);
   return (
     <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal">
         <div className="modal-hd">
           <div className="modal-title">{recipe.name}</div>
-          <div style={{display:'flex',gap:6}}><button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
+          <div style={{display:'flex',gap:6}}>
+            {canEdit&&<button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button>}
+            <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+          </div>
         </div>
         <div className="modal-bd">
-          <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
             {recipe.cuisine&&<span className="tag">{recipe.cuisine}</span>}
             {total>0&&<span className="tag">{total} min</span>}
             {recipe.servings&&<span className="tag">{recipe.servings} servings</span>}
             {recipe.calories>0&&<span className="tag tag-green">{recipe.calories} kcal/serving</span>}
+            {recipe.planCount>0&&<span className="tag tag-warn">🔥 {recipe.planCount} plans</span>}
           </div>
+          {recipe.createdByName&&<div style={{fontSize:'0.72rem',color:'var(--muted)',marginBottom:14}}>
+            Added by <strong>{recipe.createdBy==='system'?'mise (default)':recipe.createdByName}</strong>
+            {!canEdit&&recipe.createdBy!=='system'&&<span> · read-only for you</span>}
+          </div>}
           {(recipe.ingredients||[]).length>0&&<>
             <div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Ingredients</div>
             {recipe.ingredients.map((ing,i)=>(
@@ -808,8 +816,7 @@ function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
             <div style={{marginBottom:16}}/>
           </>}
           {recipe.method&&<><div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Method</div><div style={{fontSize:'0.82rem',color:'var(--muted)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{recipe.method}</div></>}
-          <div className="divider"/>
-          <button className="btn btn-danger btn-sm" onClick={onDelete}>Delete recipe</button>
+          {canEdit&&<><div className="divider"/><button className="btn btn-danger btn-sm" onClick={onDelete}>Delete recipe</button></>}
         </div>
       </div>
     </div>
@@ -900,10 +907,10 @@ function App() {
 
   useEffect(() => {
     if(!user){setRecipes([]);return;}
-    const u=rCol(user.uid).orderBy('name').onSnapshot(snap=>{
+    const u=rCol().orderBy('name').onSnapshot(snap=>{
       const data=snap.docs.map(d=>({id:d.id,...d.data()}));
       setRecipes(data);
-      if(data.length===0&&!seeding) seedRecipes(user.uid);
+      if(data.length===0&&!seeding) seedRecipes();
     });
     return u;
   },[user]);
@@ -923,10 +930,10 @@ function App() {
     prDoc(user.uid).onSnapshot(s=>{if(s.exists)setProfile(s.data());else setProfile(null);});
   },[user]);
 
-  async function seedRecipes(uid) {
+  async function seedRecipes() {
     setSeeding(true);
     const batch=db.batch();
-    SEEDS.forEach(r=>batch.set(rCol(uid).doc(),r));
+    SEEDS.forEach(r=>batch.set(rCol().doc(), r));
     await batch.commit(); setSeeding(false);
   }
 
@@ -939,9 +946,23 @@ function App() {
 
   async function setMeal(di,meal,recipeId) {
     const key=slotKey(di,meal);
+    const oldSlot=weekData?.meals?.[key];
     const meals={...(weekData?.meals||{})};
-    if(recipeId) meals[key]={recipeId,cooked:false};
-    else delete meals[key];
+
+    // Decrement old recipe's planCount (fire-and-forget, don't block UX)
+    if(oldSlot?.recipeId && oldSlot.recipeId!==recipeId) {
+      rCol().doc(oldSlot.recipeId).update({planCount:firebase.firestore.FieldValue.increment(-1)}).catch(()=>{});
+    }
+
+    if(recipeId) {
+      meals[key]={recipeId,cooked:false};
+      // Only increment if this is a new recipe for this slot
+      if(!oldSlot||oldSlot.recipeId!==recipeId) {
+        rCol().doc(recipeId).update({planCount:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
+      }
+    } else {
+      delete meals[key];
+    }
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals},{merge:true});
   }
 
@@ -1045,17 +1066,32 @@ function App() {
 
   // ── Recipe CRUD ──────────────────────────────────────────────
   async function saveRecipe(data,id) {
-    if(id) await rCol(user.uid).doc(id).set(data);
-    else await rCol(user.uid).add(data);
+    if(id) {
+      await rCol().doc(id).set(data);
+    } else {
+      await rCol().add({
+        ...data,
+        createdBy: user.uid,
+        createdByName: user.displayName || user.email,
+        planCount: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
     setModal(null);
   }
   async function deleteRecipe(id) {
-    if(!confirm('Delete this recipe?')) return;
-    await rCol(user.uid).doc(id).delete(); setModal(null);
+    if(!confirm('Delete this recipe? This removes it from the global catalogue for everyone.')) return;
+    await rCol().doc(id).delete(); setModal(null);
   }
   async function bulkImport(list) {
     const batch=db.batch();
-    list.forEach(r=>batch.set(rCol(user.uid).doc(),r));
+    list.forEach(r=>batch.set(rCol().doc(),{
+      ...r,
+      createdBy: user.uid,
+      createdByName: user.displayName || user.email,
+      planCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }));
     await batch.commit(); setModal(null);
   }
 
@@ -1233,12 +1269,16 @@ function App() {
           <div className="recipe-grid">
             {recipes.map(r=>(
               <div key={r.id} className="recipe-card" onClick={()=>setModal({type:'recipeDetail',recipe:r})}>
-                <div className="recipe-card-name">{r.name}</div>
+                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:6,marginBottom:5}}>
+                  <div className="recipe-card-name" style={{margin:0}}>{r.name}</div>
+                  {r.planCount>0&&<span style={{fontSize:'0.7rem',color:'var(--warn)',fontWeight:700,whiteSpace:'nowrap',flexShrink:0}}>🔥 {r.planCount}</span>}
+                </div>
                 <div className="recipe-card-meta">
                   {r.cuisine&&<span>{r.cuisine}</span>}
                   {(r.prepTime||r.cookTime)?<span>{(r.prepTime||0)+(r.cookTime||0)} min</span>:null}
                   {r.calories>0&&<span style={{color:'var(--accent2)',fontWeight:600}}>{r.calories} kcal</span>}
                 </div>
+                {r.createdByName&&r.createdBy!=='system'&&<div style={{fontSize:'0.65rem',color:'var(--muted)',marginTop:5}}>by {r.createdByName}</div>}
               </div>
             ))}
           </div>
@@ -1260,6 +1300,7 @@ function App() {
       )}
       {modal?.type==='recipeDetail'&&(
         <RecipeDetailModal recipe={modal.recipe}
+          canEdit={modal.recipe.createdBy===user.uid}
           onEdit={()=>setModal({type:'recipeForm',recipe:modal.recipe})}
           onDelete={()=>deleteRecipe(modal.recipe.id)}
           onClose={()=>setModal(null)}/>
