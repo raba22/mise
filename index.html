@@ -781,8 +781,9 @@ function MealPickerModal({ recipes, currentId, calBudget, onPick, onClear, onClo
 // ══════════════════════════════════════════════════════════════
 //  RECIPE DETAIL MODAL
 // ══════════════════════════════════════════════════════════════
-function RecipeDetailModal({ recipe, canEdit, onEdit, onDelete, onClose }) {
+function RecipeDetailModal({ recipe, weekKey, canEdit, onEdit, onDelete, onClose }) {
   const total=(recipe.prepTime||0)+(recipe.cookTime||0);
+  const weekUserCount = Object.keys(recipe.weekPresence?.[weekKey]||{}).length;
   return (
     <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal">
@@ -799,7 +800,7 @@ function RecipeDetailModal({ recipe, canEdit, onEdit, onDelete, onClose }) {
             {total>0&&<span className="tag">{total} min</span>}
             {recipe.servings&&<span className="tag">{recipe.servings} servings</span>}
             {recipe.calories>0&&<span className="tag tag-green">{recipe.calories} kcal/serving</span>}
-            {recipe.planCount>0&&<span className="tag tag-warn">🔥 {recipe.planCount}× planned</span>}
+            {weekUserCount>0&&<span className="tag tag-warn">👥 {weekUserCount} planning this week</span>}
           </div>
           {recipe.createdByName&&<div style={{fontSize:'0.72rem',color:'var(--muted)',marginBottom:14}}>
             Added by <strong>{recipe.createdBy==='system'?'mise (default)':recipe.createdByName}</strong>
@@ -963,21 +964,31 @@ function App() {
   function getMeal(di,meal)  { return weekData?.meals?.[slotKey(di,meal)]||null; }
   function getRecipe(id)     { return recipes.find(r=>r.id===id)||null; }
 
+  // ── Week presence sync ───────────────────────────────────────
+  // Compares newMeals against current weekData to find which recipes
+  // were added or dropped this operation, then writes user's UID
+  // into weekPresence[weekKey] on each affected recipe document.
+  async function syncPresence(newMeals) {
+    const oldIds = new Set(Object.values(weekData?.meals||{}).map(s=>s?.recipeId).filter(Boolean));
+    const newIds = new Set(Object.values(newMeals).map(s=>s?.recipeId).filter(Boolean));
+    const toAdd    = [...newIds].filter(id=>!oldIds.has(id));
+    const toRemove = [...oldIds].filter(id=>!newIds.has(id));
+    if(!toAdd.length && !toRemove.length) return;
+    const batch = db.batch();
+    toAdd.forEach(id =>
+      batch.update(rCol().doc(id), {[`weekPresence.${weekKey}.${user.uid}`]: true})
+    );
+    toRemove.forEach(id =>
+      batch.update(rCol().doc(id), {[`weekPresence.${weekKey}.${user.uid}`]: firebase.firestore.FieldValue.delete()})
+    );
+    await batch.commit().catch(err => console.error('weekPresence sync failed:', err));
+  }
+
   async function setMeal(di,meal,recipeId) {
     const key=slotKey(di,meal);
-    const oldSlot=weekData?.meals?.[key];
     const meals={...(weekData?.meals||{})};
-
-    if(recipeId) {
-      meals[key]={recipeId,cooked:false};
-      // Increment planCount only when a new recipe is assigned to this slot
-      // planCount is cumulative (never decrements) — it reflects all-time popularity
-      if(!oldSlot||oldSlot.recipeId!==recipeId) {
-        rCol().doc(recipeId).update({planCount:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
-      }
-    } else {
-      delete meals[key];
-    }
+    if(recipeId) { meals[key]={recipeId,cooked:false}; } else { delete meals[key]; }
+    await syncPresence(meals);
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals},{merge:true});
   }
 
@@ -1070,13 +1081,14 @@ function App() {
       }
     }
 
+    await syncPresence(newMeals);
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:newMeals},{merge:true});
     setProposing(false);
   }
 
   async function clearWeek() {
     if(!confirm('Clear all meals for this week?')) return;
-    // planCount is cumulative — no decrement on clear
+    await syncPresence({});
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:{}},{merge:true});
   }
 
@@ -1287,7 +1299,7 @@ function App() {
               <div key={r.id} className="recipe-card" onClick={()=>setModal({type:'recipeDetail',recipe:r})}>
                 <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:6,marginBottom:5}}>
                   <div className="recipe-card-name" style={{margin:0}}>{r.name}</div>
-                  {r.planCount>0&&<span style={{fontSize:'0.7rem',color:'var(--warn)',fontWeight:700,whiteSpace:'nowrap',flexShrink:0}}>🔥 {r.planCount}</span>}
+                  {Object.keys(r.weekPresence?.[weekKey]||{}).length>0&&<span style={{fontSize:'0.7rem',color:'var(--accent2)',fontWeight:700,whiteSpace:'nowrap',flexShrink:0}}>👥 {Object.keys(r.weekPresence[weekKey]).length}</span>}
                 </div>
                 <div className="recipe-card-meta">
                   {r.cuisine&&<span>{r.cuisine}</span>}
@@ -1315,7 +1327,7 @@ function App() {
         <RecipeFormModal initial={modal.recipe} onSave={data=>saveRecipe(data,modal.recipe?.id)} onClose={()=>setModal(null)}/>
       )}
       {modal?.type==='recipeDetail'&&(
-        <RecipeDetailModal recipe={modal.recipe}
+        <RecipeDetailModal recipe={modal.recipe} weekKey={weekKey}
           canEdit={modal.recipe.createdBy===user.uid}
           onEdit={()=>setModal({type:'recipeForm',recipe:modal.recipe})}
           onDelete={()=>deleteRecipe(modal.recipe.id)}
