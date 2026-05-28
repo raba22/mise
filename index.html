@@ -988,7 +988,7 @@ function App() {
     const key=slotKey(di,meal);
     const meals={...(weekData?.meals||{})};
     if(recipeId) { meals[key]={recipeId,cooked:false}; } else { delete meals[key]; }
-    await syncPresence(meals);
+    syncPresence(meals); // fire-and-forget — never blocks the primary write
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals},{merge:true});
   }
 
@@ -1081,14 +1081,14 @@ function App() {
       }
     }
 
-    await syncPresence(newMeals);
+    syncPresence(newMeals); // fire-and-forget
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:newMeals},{merge:true});
     setProposing(false);
   }
 
   async function clearWeek() {
     if(!confirm('Clear all meals for this week?')) return;
-    await syncPresence({});
+    syncPresence({}); // fire-and-forget
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:{}},{merge:true});
   }
 
