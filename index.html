@@ -20,7 +20,6 @@ const FIREBASE_CONFIG = {
   appId:             "1:587252732379:web:b9c3e9cd178ad786bb97fe",
   measurementId:     "G-VH344J32XG"
 };
-// ─────────────────────────────────────────────────────────────
 
 const IS_CONFIGURED = !FIREBASE_CONFIG.apiKey.includes('PASTE');
 let auth = null, db = null;
@@ -55,7 +54,6 @@ if (IS_CONFIGURED) {
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-  /* Layout */
   .app-shell { display: flex; flex-direction: column; min-height: 100vh; }
   .topbar { display: flex; align-items: center; padding: 0 24px; height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); gap: 12px; position: sticky; top: 0; z-index: 100; }
   .topbar-logo { font-weight: 900; font-size: 1.2rem; letter-spacing: -0.5px; color: var(--accent); }
@@ -64,219 +62,200 @@ if (IS_CONFIGURED) {
   .topbar-user { font-size: 0.78rem; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .main { flex: 1; padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-  /* Buttons */
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: opacity 0.15s, transform 0.1s; }
   .btn:active { transform: scale(0.97); }
   .btn-primary   { background: var(--accent); color: #fff; }
   .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
   .btn-ghost     { background: transparent; color: var(--muted); border: 1px solid var(--border); }
   .btn-danger    { background: var(--danger); color: #fff; }
+  .btn-success   { background: var(--accent2); color: #0f1a17; }
   .btn-sm        { padding: 5px 11px; font-size: 0.76rem; }
   .btn:disabled  { opacity: 0.45; cursor: not-allowed; }
   .btn:not(:disabled):hover { opacity: 0.85; }
 
-  /* Forms */
   input, select, textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--text); padding: 8px 12px; font-size: 0.85rem; outline: none; width: 100%; transition: border-color 0.15s; }
   input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
   .field { margin-bottom: 14px; }
-
-  /* Cards */
   .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
 
-  /* Auth */
+  /* Auth / Landing */
   .auth-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-  .auth-box  { width: 100%; max-width: 380px; }
-  .auth-logo { text-align: center; font-size: 2.4rem; font-weight: 900; color: var(--accent); margin-bottom: 4px; letter-spacing: -1px; }
-  .auth-sub  { text-align: center; color: var(--muted); font-size: 0.82rem; margin-bottom: 28px; }
-  .auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
-  .auth-tab  { flex: 1; text-align: center; padding: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted); transition: all 0.15s; }
-  .auth-tab.active { color: var(--accent); border-color: var(--accent); }
   .auth-error { background: rgba(224,92,92,0.12); border: 1px solid rgba(224,92,92,0.35); color: #f09090; font-size: 0.8rem; padding: 9px 12px; border-radius: 7px; margin-bottom: 14px; }
-  .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 10px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, background 0.15s; margin-bottom: 4px; }
-  .btn-google:hover:not(:disabled) { border-color: #4285F4; background: rgba(66,133,244,0.06); }
-  .btn-google:disabled { opacity: 0.45; cursor: not-allowed; }
-  .auth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--muted); font-size: 0.75rem; }
-  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  /* Setup */
-  .setup-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-  .setup-box  { max-width: 560px; width: 100%; }
-  pre.setup-code { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 0.75rem; overflow-x: auto; color: #a0c4ff; line-height: 1.6; margin: 12px 0; }
-  .setup-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
-  .setup-num  { background: var(--accent); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-  .setup-step p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
-  .setup-step a { color: var(--accent); }
-
-  /* Week nav */
-  .week-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-  .week-nav-label { font-weight: 700; font-size: 0.95rem; flex: 1; text-align: center; }
-
-  /* Score pills */
-  .score-bar  { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-  .score-pill { flex: 1; min-width: 120px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; }
-  .score-pill-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
-  .score-pill-value { font-size: 1.4rem; font-weight: 800; }
-  .c-accent  { color: var(--accent); }
-  .c-accent2 { color: var(--accent2); }
-  .c-warn    { color: var(--warn); }
-  .progress-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; }
-  .progress-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
-  .streak-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; color: var(--warn); font-weight: 700; }
-
-  /* Calorie row */
-  .calorie-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
-  .calorie-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(86,207,178,0.1); border: 1px solid rgba(86,207,178,0.25); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: var(--accent2); font-weight: 600; }
-  .calorie-pill-day { color: var(--muted); font-weight: 500; }
-
-  /* Planner table */
-  .planner-wrap { overflow-x: auto; margin-bottom: 10px; }
-  .planner-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
-  .planner-table thead th { padding: 6px 8px 12px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); text-align: left; font-weight: 700; }
-  .planner-table thead th:first-child { width: 72px; }
-  .planner-table td { padding: 3px 4px; vertical-align: top; }
-  .planner-table td:first-child { padding: 3px 10px 3px 0; vertical-align: middle; }
-  .day-name { font-size: 0.82rem; font-weight: 700; }
-  .day-date { font-size: 0.67rem; color: var(--muted); }
-  .today .day-name { color: var(--accent); }
-  .today .day-date { color: var(--accent); opacity: 0.7; }
-
-  /* Meal slot */
-  .slot { min-height: 68px; border-radius: 8px; padding: 9px 10px; cursor: pointer; border: 1.5px dashed var(--border); background: var(--surface); display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.12s; position: relative; }
-  .slot.empty:hover { border-color: var(--accent); border-style: solid; }
-  .slot.filled { border-style: solid; border-color: var(--border); background: var(--card); align-items: flex-start; justify-content: flex-start; }
-  .slot.cooked { border-color: var(--accent2); }
-  .slot.cooked::after { content: '✓'; position: absolute; top: 6px; right: 9px; font-size: 0.68rem; color: var(--accent2); font-weight: 700; }
-  .slot-empty-icon { font-size: 1.1rem; color: var(--muted); }
-  .slot-empty-text { font-size: 0.66rem; color: var(--muted); margin-top: 2px; }
-  .slot-name { font-size: 0.8rem; font-weight: 600; line-height: 1.3; }
-  .slot-meta { font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
-  .slot-kcal { font-size: 0.62rem; color: var(--accent2); font-weight: 600; margin-top: 1px; }
-  .slot-btn  { margin-top: 6px; padding: 3px 8px; font-size: 0.68rem; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
-  .slot-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-  .slot-clear { position: absolute; top: 5px; right: 7px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; line-height: 1; padding: 3px 5px; border-radius: 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; z-index: 2; }
-  .slot.filled:hover .slot-clear { opacity: 1; }
-  .slot-clear:hover { color: var(--danger) !important; background: rgba(224,92,92,0.12); }
-
-  /* Modal */
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
-  .modal   { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; }
-  .modal-sm { max-width: 420px; }
-  .modal-hd { display: flex; align-items: center; padding: 18px 20px 0; gap: 10px; }
-  .modal-title { font-weight: 700; font-size: 1rem; flex: 1; }
-  .modal-bd { padding: 16px 20px 22px; }
-
-  /* Ingredient rows */
-  .ing-row { display: grid; grid-template-columns: 1fr 76px 76px 28px; gap: 6px; margin-bottom: 7px; align-items: center; }
-  .ing-hdr { font-size: 0.67rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding-bottom: 2px; }
-  .ing-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; line-height: 1; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-  .ing-del:hover { background: rgba(224,92,92,0.15); color: var(--danger); }
-
-  /* Picker */
-  .picker-list { max-height: 52vh; overflow-y: auto; }
-  .picker-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: background 0.12s; }
-  .picker-item:hover { background: var(--card); }
-  .picker-item-name { font-weight: 600; font-size: 0.85rem; flex: 1; }
-  .picker-item-meta { font-size: 0.72rem; color: var(--muted); }
-
-  /* Recipe grid */
-  .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; }
-  .recipe-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color 0.12s; }
-  .recipe-card:hover { border-color: var(--accent); }
-  .recipe-card-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 5px; }
-  .recipe-card-meta { font-size: 0.72rem; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
-
-  /* Grocery */
-  .shop-section-title { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 8px; }
-  .shop-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; }
-  .shop-item.done { opacity: 0.42; }
-  .shop-item input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent2); flex-shrink: 0; cursor: pointer; }
-  .shop-item-text { flex: 1; font-size: 0.83rem; }
-  .shop-item.done .shop-item-text { text-decoration: line-through; }
-  .shop-item-qty { font-size: 0.75rem; color: var(--accent2); font-weight: 600; white-space: nowrap; }
-  .shop-del { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 0.85rem; }
-  .shop-del:hover { color: var(--danger); }
-  .manual-row { display: flex; gap: 8px; margin-top: 10px; }
-
-  /* Tabs */
-  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); padding: 4px; border-radius: var(--radius); border: 1px solid var(--border); width: fit-content; }
-  .view-tab  { padding: 6px 16px; border-radius: 7px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--muted); transition: all 0.12s; border: none; background: none; }
-  .view-tab.active { background: var(--accent); color: #fff; }
-
-  /* Misc */
-  .section-hd  { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .section-ttl { font-weight: 700; font-size: 1rem; flex: 1; }
-  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 0.85rem; line-height: 1.7; }
-  .tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: rgba(124,106,247,0.12); color: var(--accent); border: 1px solid rgba(124,106,247,0.25); }
-  .tag-green { background: rgba(86,207,178,0.12); color: var(--accent2); border-color: rgba(86,207,178,0.25); }
-  .divider { height: 1px; background: var(--border); margin: 18px 0; }
-  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-full { display: flex; align-items: center; justify-content: center; min-height: 100vh; gap: 12px; color: var(--muted); font-size: 0.85rem; }
-  .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  select option { background: var(--surface); }
-  /* Landing page */
-  @keyframes float-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-24px) scale(1.06); } }
-  @keyframes float-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-18px,18px) scale(0.95); } }
-  @keyframes fade-up { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes float-a { 0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24px,-24px) scale(1.06)} }
+  @keyframes float-b { 0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,18px) scale(0.95)} }
+  @keyframes fade-up  { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
   .orb-a { animation: float-a 14s ease-in-out infinite; }
   .orb-b { animation: float-b 18s ease-in-out infinite; }
   .land-in { animation: fade-up 0.55s ease both; }
-  .land-logo {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .land-google-btn {
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    width: 100%; max-width: 320px; margin: 0 auto;
-    padding: 14px 24px; border-radius: 12px;
-    border: 1px solid var(--border); background: var(--card);
-    color: var(--text); font-size: 0.92rem; font-weight: 700;
-    cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
-  }
-  .land-google-btn:hover:not(:disabled) { border-color: #4285F4; background: rgba(66,133,244,0.07); transform: translateY(-1px); }
-  .land-google-btn:active:not(:disabled) { transform: translateY(0); }
-  .land-google-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .land-feature { display:flex; align-items:flex-start; gap:12px; text-align:left; }
-  .land-feature-icon { font-size:1.4rem; flex-shrink:0; margin-top:2px; }
-  .land-feature-title { font-size:0.82rem; font-weight:700; margin-bottom:3px; }
-  .land-feature-desc { font-size:0.75rem; color:var(--muted); line-height:1.55; }
+  .land-logo { background: linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .land-google-btn { display:flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:320px;margin:0 auto;padding:14px 24px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:0.92rem;font-weight:700;cursor:pointer;transition:border-color 0.15s,background 0.15s,transform 0.1s; }
+  .land-google-btn:hover:not(:disabled) { border-color:#4285F4;background:rgba(66,133,244,0.07);transform:translateY(-1px); }
+  .land-google-btn:disabled { opacity:0.5;cursor:not-allowed; }
+  .land-feature { display:flex;align-items:flex-start;gap:12px;text-align:left; }
+  .land-feature-icon { font-size:1.4rem;flex-shrink:0;margin-top:2px; }
+  .land-feature-title { font-size:0.82rem;font-weight:700;margin-bottom:3px; }
+  .land-feature-desc  { font-size:0.75rem;color:var(--muted);line-height:1.55; }
 
-  /* Past days */
-  .past-day { opacity: 0.45; }
-  .past-day .slot.empty { pointer-events: none; }
+  /* Week nav */
+  .week-nav { display:flex;align-items:center;gap:10px;margin-bottom:18px; }
+  .week-nav-label { font-weight:700;font-size:0.95rem;flex:1;text-align:center; }
+  .week-actions { display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap; }
 
-  /* Score tooltip */
-  .score-info { position: relative; display: inline-flex; align-items: center; margin-left: 5px; cursor: default; vertical-align: middle; }
-  .score-tip { visibility: hidden; opacity: 0; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.72rem; color: var(--muted); white-space: nowrap; z-index: 30; transition: opacity 0.15s; pointer-events: none; line-height: 1.8; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
-  .score-info:hover .score-tip { visibility: visible; opacity: 1; }
+  /* Score pills */
+  .score-bar  { display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap; }
+  .score-pill { flex:1;min-width:120px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px; }
+  .score-pill-label { font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px; }
+  .score-pill-value { font-size:1.4rem;font-weight:800; }
+  .c-accent  { color:var(--accent); }
+  .c-accent2 { color:var(--accent2); }
+  .c-warn    { color:var(--warn); }
+  .c-danger  { color:var(--danger); }
+  .progress-bar-wrap { height:4px;background:var(--border);border-radius:2px;margin-top:6px; }
+  .progress-bar-fill { height:100%;border-radius:2px;transition:width 0.4s; }
+  .streak-badge { display:inline-flex;align-items:center;gap:5px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.3);border-radius:20px;padding:4px 12px;font-size:0.78rem;color:var(--warn);font-weight:700; }
 
-  /* Mobile day cards */
-  .desktop-planner { display: block; }
-  .mobile-planner  { display: none; }
-  .day-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
-  .day-card-hd { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
-  .day-card-hd.today .day-name { color: var(--accent); }
-  .day-card-hd.today .day-date { color: var(--accent); opacity: 0.7; }
-  .day-card-meals { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .day-card-meal-label { font-size: 0.68rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  /* Daily calorie budget row */
+  .budget-row { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px; }
+  .budget-pill { display:inline-flex;flex-direction:column;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px 12px;min-width:80px; }
+  .budget-pill.over  { border-color:rgba(224,92,92,0.5);background:rgba(224,92,92,0.07); }
+  .budget-pill.under { border-color:rgba(86,207,178,0.35);background:rgba(86,207,178,0.07); }
+  .budget-day   { font-size:0.65rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em; }
+  .budget-val   { font-size:0.82rem;font-weight:700;margin-top:2px; }
+  .budget-sub   { font-size:0.6rem;color:var(--muted);margin-top:1px; }
 
-  @media (max-width: 640px) {
-    .two-col, .three-col { grid-template-columns: 1fr; }
-    .main { padding: 14px; }
-    .topbar { padding: 0 14px; }
-    .topbar-week { display: none; }
-    .topbar-user { max-width: 110px; }
-    .desktop-planner { display: none; }
-    .mobile-planner  { display: block; }
-    .view-tabs { width: 100%; }
-    .view-tab  { flex: 1; text-align: center; padding: 6px 6px; font-size: 0.75rem; }
-    .score-pill { min-width: 0; }
-    .week-actions { flex-direction: column; align-items: stretch; }
-    .week-actions .btn { justify-content: center; }
-    .land-logo { font-size: 3rem !important; }
-    .land-feature-grid { grid-template-columns: 1fr !important; }
+  /* Planner */
+  .planner-wrap { overflow-x:auto;margin-bottom:10px; }
+  .planner-table { width:100%;border-collapse:separate;border-spacing:0 4px; }
+  .planner-table thead th { padding:6px 8px 12px;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);text-align:left;font-weight:700; }
+  .planner-table thead th:first-child { width:72px; }
+  .planner-table td { padding:3px 4px;vertical-align:top; }
+  .planner-table td:first-child { padding:3px 10px 3px 0;vertical-align:middle; }
+  .day-name { font-size:0.82rem;font-weight:700; }
+  .day-date { font-size:0.67rem;color:var(--muted); }
+  .today .day-name { color:var(--accent); }
+  .today .day-date { color:var(--accent);opacity:0.7; }
+  .past-day { opacity:0.45; }
+  .past-day .slot.empty { pointer-events:none; }
+
+  /* Slot */
+  .slot { min-height:68px;border-radius:8px;padding:9px 10px;cursor:pointer;border:1.5px dashed var(--border);background:var(--surface);display:flex;flex-direction:column;justify-content:center;align-items:center;transition:all 0.12s;position:relative; }
+  .slot.empty:hover { border-color:var(--accent);border-style:solid; }
+  .slot.filled { border-style:solid;border-color:var(--border);background:var(--card);align-items:flex-start;justify-content:flex-start; }
+  .slot.cooked { border-color:var(--accent2); }
+  .slot.cooked::after { content:'✓';position:absolute;top:6px;right:9px;font-size:0.68rem;color:var(--accent2);font-weight:700; }
+  .slot-empty-icon { font-size:1.1rem;color:var(--muted); }
+  .slot-empty-text { font-size:0.66rem;color:var(--muted);margin-top:2px; }
+  .slot-name { font-size:0.8rem;font-weight:600;line-height:1.3; }
+  .slot-meta { font-size:0.62rem;color:var(--muted);margin-top:2px; }
+  .slot-kcal { font-size:0.62rem;color:var(--accent2);font-weight:600;margin-top:1px; }
+  .slot-btn  { margin-top:6px;padding:3px 8px;font-size:0.68rem;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer; }
+  .slot-btn:hover { border-color:var(--accent2);color:var(--accent2); }
+  .slot-clear { position:absolute;top:5px;right:7px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;line-height:1;padding:3px 5px;border-radius:4px;opacity:0;transition:opacity 0.15s;z-index:2; }
+  .slot.filled:hover .slot-clear { opacity:1; }
+  .slot-clear:hover { color:var(--danger)!important;background:rgba(224,92,92,0.12); }
+
+  /* Modal */
+  .overlay { position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px; }
+  .modal    { background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto; }
+  .modal-sm { max-width:440px; }
+  .modal-lg { max-width:680px; }
+  .modal-hd { display:flex;align-items:center;padding:18px 20px 0;gap:10px; }
+  .modal-title { font-weight:700;font-size:1rem;flex:1; }
+  .modal-bd { padding:16px 20px 22px; }
+
+  /* Ing rows */
+  .ing-row { display:grid;grid-template-columns:1fr 76px 76px 28px;gap:6px;margin-bottom:7px;align-items:center; }
+  .ing-hdr { font-size:0.67rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding-bottom:2px; }
+  .ing-del { background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%; }
+  .ing-del:hover { background:rgba(224,92,92,0.15);color:var(--danger); }
+
+  /* Picker */
+  .picker-list { max-height:52vh;overflow-y:auto; }
+  .picker-item { display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;cursor:pointer;transition:background 0.12s; }
+  .picker-item:hover { background:var(--card); }
+  .picker-item-name { font-weight:600;font-size:0.85rem;flex:1; }
+  .picker-item-meta { font-size:0.72rem;color:var(--muted); }
+
+  /* Recipe grid */
+  .recipe-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px; }
+  .recipe-card { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:border-color 0.12s; }
+  .recipe-card:hover { border-color:var(--accent); }
+  .recipe-card-name { font-weight:700;font-size:0.88rem;margin-bottom:5px; }
+  .recipe-card-meta { font-size:0.72rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap; }
+
+  /* Grocery */
+  .shop-section-title { font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:20px 0 8px; }
+  .shop-item { display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:6px; }
+  .shop-item.done { opacity:0.42; }
+  .shop-item input[type=checkbox] { width:15px;height:15px;accent-color:var(--accent2);flex-shrink:0;cursor:pointer; }
+  .shop-item-text { flex:1;font-size:0.83rem; }
+  .shop-item.done .shop-item-text { text-decoration:line-through; }
+  .shop-item-qty { font-size:0.75rem;color:var(--accent2);font-weight:600;white-space:nowrap; }
+  .shop-del { background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 5px;border-radius:4px;font-size:0.85rem; }
+  .shop-del:hover { color:var(--danger); }
+  .manual-row { display:flex;gap:8px;margin-top:10px; }
+
+  /* Profile / BMI */
+  .bmi-card { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px; }
+  .bmi-number { font-size:3rem;font-weight:900;letter-spacing:-2px;line-height:1; }
+  .bmi-bar-wrap { height:8px;background:var(--border);border-radius:4px;margin:10px 0 4px;position:relative; }
+  .bmi-bar-fill { height:100%;border-radius:4px;transition:width 0.5s; }
+  .bmi-marker { position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;border:2.5px solid var(--bg);transform:translateX(-50%);transition:left 0.5s; }
+  .bmi-scale { display:flex;justify-content:space-between;font-size:0.65rem;color:var(--muted); }
+  .stat-row { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px; }
+  .stat-box { background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center; }
+  .stat-val { font-size:1.2rem;font-weight:800;margin-bottom:2px; }
+  .stat-lbl { font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em; }
+  .profile-tip { background:rgba(124,106,247,0.08);border:1px solid rgba(124,106,247,0.2);border-radius:8px;padding:12px 16px;font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:16px; }
+
+  /* Tabs */
+  .view-tabs { display:flex;gap:4px;margin-bottom:20px;background:var(--surface);padding:4px;border-radius:var(--radius);border:1px solid var(--border);width:fit-content; }
+  .view-tab  { padding:6px 14px;border-radius:7px;font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.12s;border:none;background:none; }
+  .view-tab.active { background:var(--accent);color:#fff; }
+
+  /* Misc */
+  .section-hd  { display:flex;align-items:center;gap:10px;margin-bottom:14px; }
+  .section-ttl { font-weight:700;font-size:1rem;flex:1; }
+  .empty-state { text-align:center;padding:48px 20px;color:var(--muted);font-size:0.85rem;line-height:1.7; }
+  .tag       { display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.7rem;font-weight:600;background:rgba(124,106,247,0.12);color:var(--accent);border:1px solid rgba(124,106,247,0.25); }
+  .tag-green { background:rgba(86,207,178,0.12);color:var(--accent2);border-color:rgba(86,207,178,0.25); }
+  .tag-warn  { background:rgba(245,166,35,0.12);color:var(--warn);border-color:rgba(245,166,35,0.25); }
+  .divider { height:1px;background:var(--border);margin:18px 0; }
+  .spinner { display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-full { display:flex;align-items:center;justify-content:center;min-height:100vh;gap:12px;color:var(--muted);font-size:0.85rem; }
+  .two-col   { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+  .three-col { display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px; }
+  .four-col  { display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px; }
+  select option { background:var(--surface); }
+  .info-box { background:rgba(86,207,178,0.07);border:1px solid rgba(86,207,178,0.2);border-radius:8px;padding:12px 16px;font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:14px; }
+  .warn-box { background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.2);border-radius:8px;padding:12px 16px;font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:14px; }
+
+  /* Mobile */
+  .desktop-planner { display:block; }
+  .mobile-planner  { display:none; }
+  .day-card { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden; }
+  .day-card-hd { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border); }
+  .day-card-hd.today .day-name { color:var(--accent); }
+  .day-card-meals { padding:10px;display:flex;flex-direction:column;gap:8px; }
+  .day-card-meal-label { font-size:0.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px; }
+
+  @media (max-width:640px) {
+    .two-col,.three-col,.four-col { grid-template-columns:1fr; }
+    .main { padding:14px; }
+    .topbar { padding:0 14px; }
+    .topbar-week { display:none; }
+    .topbar-user { max-width:110px; }
+    .desktop-planner { display:none; }
+    .mobile-planner  { display:block; }
+    .view-tabs { width:100%; }
+    .view-tab  { flex:1;text-align:center;padding:6px 4px;font-size:0.72rem; }
+    .score-pill { min-width:0; }
+    .week-actions { flex-direction:column;align-items:stretch; }
+    .week-actions .btn { justify-content:center; }
+    .land-logo { font-size:3rem!important; }
+    .stat-row { grid-template-columns:1fr 1fr; }
   }
 </style>
 </head>
@@ -290,6 +269,15 @@ const { useState, useEffect, useRef, useCallback } = React;
 const DAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const MEALS = ['Breakfast','Lunch','Dinner'];
 const ICONS = ['☀️','🌤️','🌙'];
+const MEAL_SPLIT = { Breakfast: 0.25, Lunch: 0.35, Dinner: 0.40 };
+
+const ACTIVITY_OPTIONS = [
+  { value:'sedentary',   label:'Sedentary',    desc:'Desk job, little exercise',        factor:1.2   },
+  { value:'light',       label:'Light',         desc:'Light exercise 1–3 days/week',     factor:1.375 },
+  { value:'moderate',    label:'Moderate',      desc:'Moderate exercise 3–5 days/week',  factor:1.55  },
+  { value:'active',      label:'Active',        desc:'Hard exercise 6–7 days/week',      factor:1.725 },
+  { value:'very_active', label:'Very active',   desc:'Physical job + hard training',     factor:1.9   },
+];
 
 // ── Week helpers ───────────────────────────────────────────────
 function toISOWeek(date) {
@@ -299,158 +287,308 @@ function toISOWeek(date) {
   const y = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return `${d.getUTCFullYear()}-W${String(Math.ceil((((d-y)/86400000)+1)/7)).padStart(2,'0')}`;
 }
-
 function weekStart(wk) {
-  const [yr, w] = wk.split('-W');
-  const jan4 = new Date(Date.UTC(+yr, 0, 4));
+  const [yr,w] = wk.split('-W');
+  const jan4 = new Date(Date.UTC(+yr,0,4));
   const s = new Date(jan4);
-  s.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay()||7) - 1));
-  s.setUTCDate(s.getUTCDate() + (parseInt(w)-1)*7);
+  s.setUTCDate(jan4.getUTCDate()-((jan4.getUTCDay()||7)-1));
+  s.setUTCDate(s.getUTCDate()+(parseInt(w)-1)*7);
   return s;
 }
-
 function weekRange(wk) {
-  const s = weekStart(wk), e = new Date(s);
+  const s=weekStart(wk), e=new Date(s);
   e.setUTCDate(e.getUTCDate()+6);
-  const o = { month:'short', day:'numeric', timeZone:'UTC' };
+  const o={month:'short',day:'numeric',timeZone:'UTC'};
   return `${s.toLocaleDateString('en-AU',o)} – ${e.toLocaleDateString('en-AU',o)}`;
 }
-
-function dayDateStr(wk, di) {
-  const d = new Date(weekStart(wk));
+function dayDateStr(wk,di) {
+  const d=new Date(weekStart(wk));
   d.setUTCDate(d.getUTCDate()+di);
   return d.toLocaleDateString('en-AU',{month:'short',day:'numeric',timeZone:'UTC'});
 }
-
-function todayStr() {
-  return new Date().toLocaleDateString('en-AU',{month:'short',day:'numeric'});
+function todayStr() { return new Date().toLocaleDateString('en-AU',{month:'short',day:'numeric'}); }
+function isPastDay(wk,di) {
+  const d=new Date(weekStart(wk)); d.setUTCDate(d.getUTCDate()+di);
+  const t=new Date();
+  return d < new Date(Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()));
 }
-
-function isPastDay(wk, di) {
-  const d = new Date(weekStart(wk));
-  d.setUTCDate(d.getUTCDate() + di);
-  const t = new Date();
-  const todayUTC = new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()));
-  return d < todayUTC;
-}
-
 function uid() { return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
 
-// ── Firestore refs ─────────────────────────────────────────────
-const rCol  = uid => db.collection('users').doc(uid).collection('recipes');
-const wDoc  = (uid,wk) => db.collection('users').doc(uid).collection('weeks').doc(wk);
-const stDoc = uid => db.collection('users').doc(uid).collection('meta').doc('streak');
+// ── Health calculations (Mifflin-St Jeor) ─────────────────────
+function calcBMI(weight, height) { return weight / Math.pow(height/100, 2); }
+function bmiCategory(bmi) {
+  if (bmi < 18.5) return { label:'Underweight', color:'#56cfb2' };
+  if (bmi < 25)   return { label:'Normal weight', color:'#56cfb2' };
+  if (bmi < 30)   return { label:'Overweight', color:'#f5a623' };
+  return { label:'Obese', color:'#e05c5c' };
+}
+function calcBMR(gender, weight, height, age) {
+  const base = 10*weight + 6.25*height - 5*age;
+  return gender === 'female' ? base - 161 : base + 5;
+}
+function calcTDEE(bmr, activity) {
+  const f = (ACTIVITY_OPTIONS.find(a=>a.value===activity)||ACTIVITY_OPTIONS[2]).factor;
+  return Math.round(bmr * f);
+}
+function calorieTarget(tdee, goal) {
+  if (goal === 'lose') return Math.max(1200, tdee - 500);
+  if (goal === 'gain') return tdee + 300;
+  return tdee;
+}
+function targetBMI(currentBMI) {
+  if (currentBMI < 18.5) return 20;
+  if (currentBMI < 25)   return Math.round(currentBMI * 10) / 10; // already good
+  return 22;
+}
+function targetWeight(bmiTarget, height) { return Math.round(bmiTarget * Math.pow(height/100,2) * 10)/10; }
 
-// ── Seed data ──────────────────────────────────────────────────
+// ── Firestore refs ─────────────────────────────────────────────
+const rCol   = u => db.collection('users').doc(u).collection('recipes');
+const wDoc   = (u,wk) => db.collection('users').doc(u).collection('weeks').doc(wk);
+const stDoc  = u => db.collection('users').doc(u).collection('meta').doc('streak');
+const prDoc  = u => db.collection('users').doc(u).collection('meta').doc('profile');
+
+// ── Seed recipes ───────────────────────────────────────────────
 const SEEDS = [
-  { name:'Pasta Napolitana', cuisine:'Italian', prepTime:5, cookTime:20, servings:2, calories:480,
-    ingredients:[{item:'pasta',qty:'400',unit:'g'},{item:'garlic cloves',qty:'2',unit:''},{item:'crushed tomatoes',qty:'1',unit:'can'},{item:'fresh basil',qty:'handful',unit:''},{item:'olive oil',qty:'2',unit:'tbsp'},{item:'salt and pepper',qty:'to taste',unit:''}],
-    method:'Sauté garlic in olive oil. Add crushed tomatoes, simmer 15 min. Cook pasta al dente. Combine, finish with torn basil.' },
-  { name:'Pongal', cuisine:'South Indian', prepTime:5, cookTime:20, servings:2, calories:390,
-    ingredients:[{item:'rice',qty:'1',unit:'cup'},{item:'moong dhal',qty:'1/4',unit:'cup'},{item:'salt',qty:'1',unit:'tsp'},{item:'asafoetida',qty:'pinch',unit:''},{item:'ginger',qty:'1',unit:'inch'},{item:'black pepper',qty:'1',unit:'tsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'cashews',qty:'10',unit:''},{item:'ghee',qty:'2',unit:'tbsp'}],
-    method:'Fry pepper, jeera and cashews in ghee until golden. Boil rice with moong dhal, ginger, salt and asafoetida until mushy. Mix.' },
-  { name:'Chole', cuisine:'Indian', prepTime:10, cookTime:40, servings:4, calories:320,
-    ingredients:[{item:'white channa, soaked overnight',qty:'1',unit:'cup'},{item:'onions, finely chopped',qty:'2',unit:''},{item:'tomato, finely chopped',qty:'1',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'chilli powder',qty:'1',unit:'tsp'},{item:'green chillies',qty:'2',unit:''},{item:'salt',qty:'to taste',unit:''},{item:'garam masala',qty:'1',unit:'tsp'},{item:'coriander powder',qty:'1',unit:'tsp'},{item:'bay leaves',qty:'2',unit:''},{item:'tea bags',qty:'2',unit:''},{item:'oil',qty:'2',unit:'tbsp'}],
-    method:'Pressure cook chickpeas with tea bags (gives colour). Sauté onions, add masalas and tomato. Add chickpeas, simmer 15 min.' },
-  { name:'Laksa', cuisine:'Malaysian', prepTime:10, cookTime:20, servings:2, calories:560,
-    ingredients:[{item:'garlic, chopped',qty:'6',unit:'cloves'},{item:'ginger, chopped',qty:'small piece',unit:''},{item:'spring onions',qty:'2',unit:''},{item:'soy sauce',qty:'2',unit:'tbsp'},{item:'olive oil',qty:'2',unit:'tbsp'},{item:'sugar',qty:'1',unit:'tsp'},{item:'laksa paste',qty:'3',unit:'tbsp'},{item:'fried tofu',qty:'200',unit:'g'},{item:'dry noodles',qty:'200',unit:'g'},{item:'chilli flakes',qty:'1',unit:'tsp'},{item:'chilli sauce',qty:'2',unit:'tbsp'},{item:'coconut milk',qty:'400',unit:'ml'}],
-    method:'Make paste with chilli sauce, laksa paste, garlic, soy sauce, oil, sugar. Pan-fry tofu. Boil noodles. Build coconut broth, add everything.' },
-  { name:'Spinach Curry', cuisine:'Indian', prepTime:5, cookTime:15, servings:2, calories:210,
-    ingredients:[{item:'spinach, washed',qty:'2',unit:'cups'},{item:'onion, finely chopped',qty:'1',unit:''},{item:'red chillies',qty:'2',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'oil',qty:'2',unit:'tbsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'salt',qty:'to taste',unit:''}],
-    method:'Heat oil, add jeera and red chillies. Fry onion until golden. Add spinach, cook until water evaporates. Season and serve.' },
-  { name:'Chia Pudding', cuisine:'Healthy', prepTime:5, cookTime:0, servings:1, calories:280,
-    ingredients:[{item:'chia seeds',qty:'3',unit:'tbsp'},{item:'almond milk',qty:'200',unit:'ml'},{item:'honey',qty:'1',unit:'tsp'},{item:'vanilla extract',qty:'few drops',unit:''}],
-    method:'Combine all ingredients, stir well, refrigerate overnight. Top with fresh fruit before serving.' },
-  { name:'Poha', cuisine:'Indian', prepTime:5, cookTime:10, servings:2, calories:250,
-    ingredients:[{item:'flattened rice (poha)',qty:'2',unit:'cups'},{item:'onion, chopped',qty:'1',unit:''},{item:'green chilli',qty:'1',unit:''},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'turmeric',qty:'1/4',unit:'tsp'},{item:'lemon juice',qty:'1',unit:'tbsp'},{item:'oil',qty:'1',unit:'tbsp'},{item:'coriander leaves',qty:'handful',unit:''}],
-    method:'Rinse and soak poha 5 min, drain. Temper mustard seeds, chilli and onion in oil. Add poha with turmeric, toss. Finish with lemon and coriander.' },
-  { name:'Green Grams Sundal', cuisine:'South Indian', prepTime:5, cookTime:15, servings:2, calories:190,
-    ingredients:[{item:'whole green moong',qty:'1',unit:'cup'},{item:'grated coconut',qty:'3',unit:'tbsp'},{item:'green chillies',qty:'2',unit:''},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'curry leaves',qty:'1',unit:'sprig'},{item:'salt',qty:'to taste',unit:''},{item:'oil',qty:'1',unit:'tbsp'}],
-    method:'Cook moong until just soft. Temper mustard seeds, curry leaves and chilli. Add moong and coconut, mix well.' },
+  { name:'Pasta Napolitana',  cuisine:'Italian',      prepTime:5,  cookTime:20, servings:2, calories:480,
+    ingredients:[{item:'pasta',qty:'400',unit:'g'},{item:'garlic',qty:'2',unit:'cloves'},{item:'crushed tomatoes',qty:'1',unit:'can'},{item:'fresh basil',qty:'handful',unit:''},{item:'olive oil',qty:'2',unit:'tbsp'}],
+    method:'Sauté garlic in olive oil. Add tomatoes, simmer 15 min. Cook pasta, combine, top with basil.' },
+  { name:'Pongal',            cuisine:'South Indian', prepTime:5,  cookTime:20, servings:2, calories:390,
+    ingredients:[{item:'rice',qty:'1',unit:'cup'},{item:'moong dhal',qty:'1/4',unit:'cup'},{item:'ghee',qty:'2',unit:'tbsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'black pepper',qty:'1',unit:'tsp'},{item:'cashews',qty:'10',unit:''},{item:'ginger',qty:'1',unit:'inch'}],
+    method:'Fry pepper, jeera, cashews in ghee. Boil rice and moong dhal together until mushy. Mix.' },
+  { name:'Chole',             cuisine:'Indian',       prepTime:10, cookTime:40, servings:4, calories:320,
+    ingredients:[{item:'chickpeas, soaked overnight',qty:'1',unit:'cup'},{item:'onions',qty:'2',unit:''},{item:'tomato',qty:'1',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'garam masala',qty:'1',unit:'tsp'},{item:'chilli powder',qty:'1',unit:'tsp'},{item:'oil',qty:'2',unit:'tbsp'}],
+    method:'Pressure cook chickpeas. Sauté onions, masalas, tomato. Add chickpeas, simmer 15 min.' },
+  { name:'Laksa',             cuisine:'Malaysian',    prepTime:10, cookTime:20, servings:2, calories:560,
+    ingredients:[{item:'dry noodles',qty:'200',unit:'g'},{item:'fried tofu',qty:'200',unit:'g'},{item:'coconut milk',qty:'400',unit:'ml'},{item:'laksa paste',qty:'3',unit:'tbsp'},{item:'garlic',qty:'6',unit:'cloves'},{item:'spring onions',qty:'2',unit:''}],
+    method:'Make paste. Pan-fry tofu. Boil noodles. Build coconut broth with paste, add everything.' },
+  { name:'Spinach Curry',     cuisine:'Indian',       prepTime:5,  cookTime:15, servings:2, calories:210,
+    ingredients:[{item:'spinach',qty:'2',unit:'cups'},{item:'onion',qty:'1',unit:''},{item:'ginger garlic paste',qty:'1',unit:'tsp'},{item:'jeera',qty:'1',unit:'tsp'},{item:'oil',qty:'2',unit:'tbsp'}],
+    method:'Temper jeera, fry onion golden, add spinach, cook till water evaporates.' },
+  { name:'Chia Pudding',      cuisine:'Healthy',      prepTime:5,  cookTime:0,  servings:1, calories:280,
+    ingredients:[{item:'chia seeds',qty:'3',unit:'tbsp'},{item:'almond milk',qty:'200',unit:'ml'},{item:'honey',qty:'1',unit:'tsp'}],
+    method:'Mix all, refrigerate overnight, top with fruit.' },
+  { name:'Poha',              cuisine:'Indian',       prepTime:5,  cookTime:10, servings:2, calories:250,
+    ingredients:[{item:'flattened rice',qty:'2',unit:'cups'},{item:'onion',qty:'1',unit:''},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'turmeric',qty:'1/4',unit:'tsp'},{item:'lemon juice',qty:'1',unit:'tbsp'}],
+    method:'Soak poha 5 min. Temper spices, add onion. Add poha with turmeric, finish with lemon.' },
+  { name:'Green Grams Sundal',cuisine:'South Indian', prepTime:5,  cookTime:15, servings:2, calories:190,
+    ingredients:[{item:'whole green moong',qty:'1',unit:'cup'},{item:'grated coconut',qty:'3',unit:'tbsp'},{item:'mustard seeds',qty:'1',unit:'tsp'},{item:'curry leaves',qty:'1',unit:'sprig'},{item:'green chillies',qty:'2',unit:''}],
+    method:'Cook moong till soft. Temper spices, add moong and coconut.' },
 ];
 
 // ══════════════════════════════════════════════════════════════
-//  LANDING / AUTH SCREEN
+//  AUTH / LANDING SCREEN
 // ══════════════════════════════════════════════════════════════
 function AuthScreen() {
-  const [err,  setErr]  = useState('');
-  const [busy, setBusy] = useState(false);
-
+  const [err,setBusy2] = useState('');
+  const [busy,setBusy] = useState(false);
   async function signInGoogle() {
-    setErr(''); setBusy(true);
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-    } catch(ex) {
-      if (ex.code !== 'auth/popup-closed-by-user') setErr(ex.message);
-    } finally { setBusy(false); }
+    setBusy2(''); setBusy(true);
+    try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+    catch(ex) { if(ex.code!=='auth/popup-closed-by-user') setBusy2(ex.message); }
+    finally { setBusy(false); }
   }
-
   const features = [
-    { icon:'📅', title:'Weekly planner', desc:'Map out all 21 meals across the week. Visualise your days at a glance.' },
-    { icon:'🛒', title:'Auto grocery list', desc:'Your shopping list builds itself from whatever you\'ve planned to cook.' },
-    { icon:'📖', title:'Recipe library', desc:'Save your go-to recipes with ingredients, method, and calorie counts.' },
-    { icon:'🔥', title:'Cook streaks', desc:'Build a habit. Track how consistently you\'re cooking what you plan.' },
+    {icon:'📅',title:'Weekly planner',        desc:'Map 21 meals across the week with calorie budgets per day.'},
+    {icon:'🧠',title:'Smart meal proposals',  desc:'Auto-fill your week from your recipe catalogue within calorie limits.'},
+    {icon:'💪',title:'Health profile + BMI',  desc:'Set your targets. The app tells you exactly how many calories per day.'},
+    {icon:'🛒',title:'Auto grocery list',     desc:'Shopping list builds itself from everything you\'ve planned.'},
   ];
-
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',position:'relative',overflow:'hidden'}}>
-
-      {/* Ambient background orbs */}
-      <div className="orb-a" style={{position:'absolute',top:'-15%',left:'-8%',width:'520px',height:'520px',background:'radial-gradient(circle, rgba(124,106,247,0.13) 0%, transparent 68%)',pointerEvents:'none'}}/>
-      <div className="orb-b" style={{position:'absolute',bottom:'-12%',right:'-6%',width:'440px',height:'440px',background:'radial-gradient(circle, rgba(86,207,178,0.09) 0%, transparent 68%)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',top:'40%',right:'15%',width:'260px',height:'260px',background:'radial-gradient(circle, rgba(124,106,247,0.06) 0%, transparent 70%)',pointerEvents:'none'}}/>
-
+      <div className="orb-a" style={{position:'absolute',top:'-15%',left:'-8%',width:'520px',height:'520px',background:'radial-gradient(circle,rgba(124,106,247,0.13) 0%,transparent 68%)',pointerEvents:'none'}}/>
+      <div className="orb-b" style={{position:'absolute',bottom:'-12%',right:'-6%',width:'440px',height:'440px',background:'radial-gradient(circle,rgba(86,207,178,0.09) 0%,transparent 68%)',pointerEvents:'none'}}/>
       <div style={{position:'relative',width:'100%',maxWidth:540,display:'flex',flexDirection:'column',alignItems:'center'}}>
-
-        {/* Brand */}
         <div className="land-in" style={{animationDelay:'0ms',textAlign:'center',marginBottom:32}}>
           <div style={{display:'inline-flex',alignItems:'baseline',gap:10,marginBottom:6}}>
             <span className="land-logo" style={{fontSize:'3.8rem',fontWeight:900,letterSpacing:'-2px',lineHeight:1}}>mise</span>
             <span style={{fontSize:'0.8rem',fontWeight:700,letterSpacing:'0.2em',textTransform:'uppercase',color:'var(--muted)',paddingBottom:4}}>en place</span>
           </div>
-          <div style={{fontSize:'1.55rem',fontWeight:800,letterSpacing:'-0.5px',lineHeight:1.3,marginBottom:12}}>
-            Plan your week.<br/>Cook with intention.
-          </div>
-          <div style={{fontSize:'0.88rem',color:'var(--muted)',lineHeight:1.75,maxWidth:380,margin:'0 auto'}}>
-            A calm, focused space to plan every meal, track your cooking, and shop without thinking twice.
-          </div>
+          <div style={{fontSize:'1.5rem',fontWeight:800,letterSpacing:'-0.5px',lineHeight:1.3,marginBottom:12}}>Plan your week.<br/>Cook with intention.</div>
+          <div style={{fontSize:'0.88rem',color:'var(--muted)',lineHeight:1.75,maxWidth:380,margin:'0 auto'}}>Meal planning that knows your calorie targets, proposes your menu, and builds your shopping list.</div>
         </div>
-
-        {/* Feature grid */}
-        <div className="land-in land-feature-grid" style={{animationDelay:'80ms',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,width:'100%',marginBottom:36}}>
+        <div className="land-in" style={{animationDelay:'80ms',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,width:'100%',marginBottom:36}}>
           {features.map(f=>(
             <div key={f.title} className="land-feature" style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:10,padding:'14px 16px'}}>
               <div className="land-feature-icon">{f.icon}</div>
-              <div>
-                <div className="land-feature-title">{f.title}</div>
-                <div className="land-feature-desc">{f.desc}</div>
-              </div>
+              <div><div className="land-feature-title">{f.title}</div><div className="land-feature-desc">{f.desc}</div></div>
             </div>
           ))}
         </div>
-
-        {/* Sign-in */}
         <div className="land-in" style={{animationDelay:'160ms',width:'100%',display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
           {err && <div className="auth-error" style={{width:'100%',maxWidth:320,textAlign:'center'}}>{err}</div>}
           <button className="land-google-btn" onClick={signInGoogle} disabled={busy}>
-            {busy
-              ? <span className="spinner" style={{width:20,height:20}}/>
-              : <svg width="20" height="20" viewBox="0 0 48 48">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                </svg>
-            }
+            {busy ? <span className="spinner" style={{width:20,height:20}}/> :
+              <svg width="20" height="20" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>}
             {busy ? 'Signing in…' : 'Continue with Google'}
           </button>
           <div style={{fontSize:'0.7rem',color:'var(--muted)'}}>Your data is private and only visible to you.</div>
         </div>
-
       </div>
     </div>
   );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PROFILE TAB
+// ══════════════════════════════════════════════════════════════
+function ProfileTab({ userId }) {
+  const blank = { gender:'male', age:'', height:'', weight:'', activity:'moderate', goal:'maintain' };
+  const [form, setForm]   = useState(blank);
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy]   = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    prDoc(userId).get().then(s => {
+      if (s.exists) setForm(f=>({...f,...s.data()}));
+      setLoaded(true);
+    });
+  }, [userId]);
+
+  const sf = (k,v) => { setForm(f=>({...f,[k]:v})); setSaved(false); };
+
+  const h = parseFloat(form.height), w = parseFloat(form.weight), a = parseInt(form.age);
+  const hasProfile = h > 0 && w > 0 && a > 0;
+  const bmi        = hasProfile ? calcBMI(w, h) : null;
+  const bmiCat     = bmi ? bmiCategory(bmi) : null;
+  const bmr        = hasProfile ? calcBMR(form.gender, w, h, a) : null;
+  const tdee       = bmr ? calcTDEE(bmr, form.activity) : null;
+  const kcalTarget = tdee ? calorieTarget(tdee, form.goal) : null;
+  const bmiTarget  = bmi ? targetBMI(bmi) : null;
+  const wtTarget   = (bmiTarget && h) ? targetWeight(bmiTarget, h) : null;
+
+  // BMI bar: 15 → 40 range mapped to 0–100%
+  const bmiPct = bmi ? Math.min(100, Math.max(0, (bmi-15)/25*100)) : 0;
+  const bmiColor = bmiCat ? bmiCat.color : 'var(--accent)';
+
+  async function save(e) {
+    e.preventDefault(); setBusy(true);
+    await prDoc(userId).set(form);
+    setBusy(false); setSaved(true);
+  }
+
+  if (!loaded) return <div className="empty-state"><span className="spinner"/></div>;
+
+  return (<>
+    <div className="section-hd"><div className="section-ttl">Health Profile</div></div>
+
+    {/* Input form */}
+    <div className="card" style={{marginBottom:16}}>
+      <form onSubmit={save}>
+        <div className="two-col">
+          <div className="field">
+            <label>Gender</label>
+            <select value={form.gender} onChange={e=>sf('gender',e.target.value)}>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div className="field">
+            <label>Age (years)</label>
+            <input type="number" min="10" max="100" value={form.age} onChange={e=>sf('age',e.target.value)} placeholder="e.g. 32"/>
+          </div>
+        </div>
+        <div className="two-col">
+          <div className="field">
+            <label>Height (cm)</label>
+            <input type="number" min="100" max="250" value={form.height} onChange={e=>sf('height',e.target.value)} placeholder="e.g. 175"/>
+          </div>
+          <div className="field">
+            <label>Weight (kg)</label>
+            <input type="number" min="30" max="300" step="0.1" value={form.weight} onChange={e=>sf('weight',e.target.value)} placeholder="e.g. 72"/>
+          </div>
+        </div>
+        <div className="field">
+          <label>Activity level</label>
+          <select value={form.activity} onChange={e=>sf('activity',e.target.value)}>
+            {ACTIVITY_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label} — {o.desc}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label>Goal</label>
+          <select value={form.goal} onChange={e=>sf('goal',e.target.value)}>
+            <option value="lose">Lose weight (−500 kcal/day deficit)</option>
+            <option value="maintain">Maintain weight</option>
+            <option value="gain">Gain weight (+300 kcal/day surplus)</option>
+          </select>
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? <span className="spinner"/> : saved ? '✓ Saved' : 'Save profile'}
+        </button>
+      </form>
+    </div>
+
+    {/* Results — only show when profile is complete */}
+    {hasProfile && bmi && (<>
+
+      {/* BMI display */}
+      <div className="bmi-card">
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+          <div>
+            <div style={{fontSize:'0.72rem',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:4}}>Your BMI</div>
+            <div className="bmi-number" style={{color:bmiColor}}>{bmi.toFixed(1)}</div>
+            <div style={{fontSize:'0.82rem',fontWeight:700,color:bmiColor,marginTop:4}}>{bmiCat.label}</div>
+          </div>
+          {bmiTarget !== Math.round(bmi*10)/10 && (
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:'0.72rem',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:4}}>Target BMI</div>
+              <div style={{fontSize:'2rem',fontWeight:800,color:'var(--accent2)'}}>{bmiTarget}</div>
+              <div style={{fontSize:'0.75rem',color:'var(--muted)'}}>~{wtTarget} kg</div>
+            </div>
+          )}
+        </div>
+
+        {/* BMI scale bar */}
+        <div className="bmi-bar-wrap" style={{marginTop:16}}>
+          <div style={{height:'100%',borderRadius:4,background:'linear-gradient(to right, #56cfb2 0%, #56cfb2 37%, #f5a623 54%, #e05c5c 75%, #e05c5c 100%)' }}/>
+          <div className="bmi-marker" style={{left:`${bmiPct}%`,background:bmiColor}}/>
+        </div>
+        <div className="bmi-scale"><span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span></div>
+      </div>
+
+      {/* Stats row */}
+      <div className="stat-row" style={{marginBottom:16}}>
+        <div className="stat-box">
+          <div className="stat-val c-accent">{Math.round(bmr)}</div>
+          <div className="stat-lbl">BMR (kcal)</div>
+          <div style={{fontSize:'0.62rem',color:'var(--muted)',marginTop:3}}>Resting burn</div>
+        </div>
+        <div className="stat-box">
+          <div className="stat-val c-warn">{tdee}</div>
+          <div className="stat-lbl">TDEE (kcal)</div>
+          <div style={{fontSize:'0.62rem',color:'var(--muted)',marginTop:3}}>Total daily burn</div>
+        </div>
+        <div className="stat-box">
+          <div className="stat-val c-accent2">{kcalTarget}</div>
+          <div className="stat-lbl">Daily target</div>
+          <div style={{fontSize:'0.62rem',color:'var(--muted)',marginTop:3}}>
+            {form.goal==='lose'?'Deficit (−500)':form.goal==='gain'?'Surplus (+300)':'Maintenance'}
+          </div>
+        </div>
+      </div>
+
+      {/* Meal split breakdown */}
+      <div className="info-box">
+        <strong>Suggested meal split for {kcalTarget} kcal/day:</strong><br/>
+        ☀️ Breakfast: <strong>{Math.round(kcalTarget*0.25)} kcal</strong> &nbsp;·&nbsp;
+        🌤️ Lunch: <strong>{Math.round(kcalTarget*0.35)} kcal</strong> &nbsp;·&nbsp;
+        🌙 Dinner: <strong>{Math.round(kcalTarget*0.40)} kcal</strong>
+        <br/><br/>
+        These targets appear on the Planner tab. Use <strong>Auto-propose</strong> to fill your week within these limits automatically.
+      </div>
+
+      {/* Disclaimer */}
+      <div style={{fontSize:'0.72rem',color:'var(--muted)',lineHeight:1.6}}>
+        Calculations use the Mifflin-St Jeor equation (±10% accuracy). This is informational only — consult a healthcare professional for medical or clinical dietary advice.
+      </div>
+    </>)}
+  </>);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -460,31 +598,19 @@ function RecipeFormModal({ initial, onSave, onClose }) {
   const blank = { name:'', cuisine:'', prepTime:'', cookTime:'', servings:'2', calories:'', ingredients:[{item:'',qty:'',unit:''}], method:'' };
   const [form, setForm] = useState(initial || blank);
   const [busy, setBusy] = useState(false);
-
   const sf = (k,v) => setForm(f=>({...f,[k]:v}));
   const si = (i,k,v) => setForm(f=>{ const a=[...f.ingredients]; a[i]={...a[i],[k]:v}; return {...f,ingredients:a}; });
   const addIng = () => setForm(f=>({...f,ingredients:[...f.ingredients,{item:'',qty:'',unit:''}]}));
   const delIng = i => setForm(f=>({...f,ingredients:f.ingredients.filter((_,j)=>j!==i)}));
-
   async function save(e) {
     e.preventDefault(); if(!form.name.trim()) return; setBusy(true);
-    await onSave({ ...form,
-      prepTime:  parseInt(form.prepTime)||0,
-      cookTime:  parseInt(form.cookTime)||0,
-      servings:  parseInt(form.servings)||1,
-      calories:  parseInt(form.calories)||0,
-      ingredients: form.ingredients.filter(r=>r.item.trim()),
-    });
+    await onSave({...form, prepTime:parseInt(form.prepTime)||0, cookTime:parseInt(form.cookTime)||0, servings:parseInt(form.servings)||1, calories:parseInt(form.calories)||0, ingredients:form.ingredients.filter(r=>r.item.trim()) });
     setBusy(false);
   }
-
   return (
     <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal">
-        <div className="modal-hd">
-          <div className="modal-title">{initial?'Edit Recipe':'New Recipe'}</div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
-        </div>
+        <div className="modal-hd"><div className="modal-title">{initial?'Edit Recipe':'New Recipe'}</div><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
         <div className="modal-bd">
           <form onSubmit={save}>
             <div className="field"><label>Name</label><input value={form.name} onChange={e=>sf('name',e.target.value)} placeholder="e.g. Pasta Napolitana" required autoFocus/></div>
@@ -499,12 +625,7 @@ function RecipeFormModal({ initial, onSave, onClose }) {
             </div>
             <div className="field">
               <label>Ingredients</label>
-              <div className="ing-row" style={{marginBottom:5}}>
-                <span className="ing-hdr">Item</span>
-                <span className="ing-hdr">Qty</span>
-                <span className="ing-hdr">Unit</span>
-                <span/>
-              </div>
+              <div className="ing-row" style={{marginBottom:5}}><span className="ing-hdr">Item</span><span className="ing-hdr">Qty</span><span className="ing-hdr">Unit</span><span/></div>
               {form.ingredients.map((r,i)=>(
                 <div className="ing-row" key={i}>
                   <input value={r.item} onChange={e=>si(i,'item',e.target.value)} placeholder="garlic cloves"/>
@@ -528,10 +649,98 @@ function RecipeFormModal({ initial, onSave, onClose }) {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  BULK IMPORT MODAL
+// ══════════════════════════════════════════════════════════════
+function ImportModal({ onImport, onClose }) {
+  const [raw,  setRaw]    = useState('');
+  const [preview, setPreview] = useState(null);
+  const [busy, setBusy]   = useState(false);
+  const [err,  setErr]    = useState('');
+
+  const TEMPLATE = JSON.stringify([
+    { name:"My Recipe", cuisine:"Indian", prepTime:10, cookTime:20, servings:2, calories:350,
+      ingredients:[{item:"garlic",qty:"3",unit:"cloves"},{item:"olive oil",qty:"2",unit:"tbsp"}],
+      method:"Step 1. Step 2." }
+  ], null, 2);
+
+  function parse() {
+    setErr(''); setPreview(null);
+    try {
+      let data = JSON.parse(raw.trim());
+      if (!Array.isArray(data)) data = [data];
+      const valid = data.map((r,i) => {
+        if (!r.name) throw new Error(`Recipe at index ${i} is missing a "name" field.`);
+        // Normalise ingredients: handle plain string arrays too
+        const ings = (r.ingredients||[]).map(ing => {
+          if (typeof ing === 'string') return { item: ing, qty: '', unit: '' };
+          return { item: ing.item||ing.name||'', qty: String(ing.qty||''), unit: ing.unit||'' };
+        });
+        return {
+          name:      r.name.trim(),
+          cuisine:   r.cuisine || '',
+          prepTime:  parseInt(r.prepTime)||0,
+          cookTime:  parseInt(r.cookTime)||0,
+          servings:  parseInt(r.servings)||1,
+          calories:  parseInt(r.calories)||0,
+          ingredients: ings,
+          method:    r.method || '',
+        };
+      });
+      setPreview(valid);
+    } catch(ex) { setErr(ex.message); }
+  }
+
+  async function doImport() {
+    if (!preview) return;
+    setBusy(true);
+    await onImport(preview);
+    setBusy(false);
+  }
+
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal modal-lg">
+        <div className="modal-hd"><div className="modal-title">Bulk Import Recipes</div><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
+        <div className="modal-bd">
+          <div className="info-box">
+            Paste a JSON array of recipes below. Each recipe should have at minimum a <code>name</code> field.
+            Ingredients can be <code>[&#123;"item":"garlic","qty":"2","unit":"cloves"&#125;]</code> or plain strings like <code>["garlic","olive oil"]</code>.
+          </div>
+          <div className="field">
+            <label>JSON data</label>
+            <textarea rows={10} value={raw} onChange={e=>setRaw(e.target.value)} placeholder={TEMPLATE} style={{fontFamily:'monospace',fontSize:'0.78rem',resize:'vertical'}}/>
+          </div>
+          {err && <div className="auth-error">{err}</div>}
+
+          {preview && (
+            <div className="info-box" style={{marginBottom:14}}>
+              ✓ Found <strong>{preview.length}</strong> recipe{preview.length!==1?'s':''} —{' '}
+              {preview.filter(r=>r.calories>0).length} with calories,{' '}
+              {preview.filter(r=>r.ingredients.length>0).length} with ingredients.
+              <div style={{marginTop:8,maxHeight:120,overflowY:'auto'}}>
+                {preview.map((r,i)=><div key={i} style={{fontSize:'0.75rem',padding:'2px 0',color:'var(--text)'}}>{i+1}. {r.name} {r.calories>0?`· ${r.calories} kcal`:''}</div>)}
+              </div>
+            </div>
+          )}
+
+          <div style={{display:'flex',gap:8,justifyContent:'flex-end',flexWrap:'wrap'}}>
+            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button className="btn btn-secondary" onClick={parse} disabled={!raw.trim()}>Parse & preview</button>
+            {preview && <button className="btn btn-success" onClick={doImport} disabled={busy}>
+              {busy?<span className="spinner"/>:`Import ${preview.length} recipe${preview.length!==1?'s':''}`}
+            </button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 //  MEAL PICKER MODAL
 // ══════════════════════════════════════════════════════════════
-function MealPickerModal({ recipes, currentId, onPick, onClear, onClose }) {
-  const [q, setQ] = useState('');
+function MealPickerModal({ recipes, currentId, calBudget, onPick, onClear, onClose }) {
+  const [q,setQ] = useState('');
   const filtered = recipes.filter(r =>
     r.name.toLowerCase().includes(q.toLowerCase()) ||
     (r.cuisine||'').toLowerCase().includes(q.toLowerCase())
@@ -539,28 +748,29 @@ function MealPickerModal({ recipes, currentId, onPick, onClear, onClose }) {
   return (
     <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal modal-sm">
-        <div className="modal-hd">
-          <div className="modal-title">Pick a recipe</div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
-        </div>
+        <div className="modal-hd"><div className="modal-title">Pick a recipe</div><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
         <div className="modal-bd">
-          <div style={{marginBottom:10}}><input placeholder="Search…" value={q} onChange={e=>setQ(e.target.value)} autoFocus/></div>
+          {calBudget > 0 && <div style={{fontSize:'0.75rem',color:'var(--accent2)',marginBottom:10}}>💡 Budget for this slot: ~{calBudget} kcal</div>}
+          <div style={{marginBottom:10}}><input placeholder="Search recipes…" value={q} onChange={e=>setQ(e.target.value)} autoFocus/></div>
           {currentId && <button className="btn btn-ghost btn-sm" style={{color:'var(--danger)',marginBottom:10}} onClick={onClear}>✕ Clear slot</button>}
           <div className="picker-list">
             {filtered.length===0 && <div className="empty-state">No recipes match</div>}
-            {filtered.map(r=>(
-              <div key={r.id} className="picker-item" onClick={()=>onPick(r)}>
-                <div style={{flex:1}}>
-                  <div className="picker-item-name">{r.name}</div>
-                  <div className="picker-item-meta">
-                    {r.cuisine && <span>{r.cuisine}</span>}
-                    {(r.prepTime||r.cookTime) ? <span> · {(r.prepTime||0)+(r.cookTime||0)} min</span> : null}
-                    {r.calories>0 ? <span style={{color:'var(--accent2)'}}> · {r.calories} kcal</span> : null}
+            {filtered.map(r=>{
+              const over = calBudget > 0 && r.calories > 0 && r.calories > calBudget * 1.25;
+              return (
+                <div key={r.id} className="picker-item" onClick={()=>onPick(r)} style={over?{opacity:0.55}:{}}>
+                  <div style={{flex:1}}>
+                    <div className="picker-item-name">{r.name} {over && <span style={{fontSize:'0.65rem',color:'var(--warn)'}}>↑ over budget</span>}</div>
+                    <div className="picker-item-meta">
+                      {r.cuisine&&<span>{r.cuisine}</span>}
+                      {(r.prepTime||r.cookTime)?<span> · {(r.prepTime||0)+(r.cookTime||0)} min</span>:null}
+                      {r.calories>0?<span style={{color:'var(--accent2)'}}> · {r.calories} kcal</span>:null}
+                    </div>
                   </div>
+                  {currentId===r.id && <span style={{color:'var(--accent)',fontSize:'0.75rem',fontWeight:700}}>✓</span>}
                 </div>
-                {currentId===r.id && <span style={{color:'var(--accent)',fontSize:'0.75rem',fontWeight:700}}>✓</span>}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -572,25 +782,22 @@ function MealPickerModal({ recipes, currentId, onPick, onClear, onClose }) {
 //  RECIPE DETAIL MODAL
 // ══════════════════════════════════════════════════════════════
 function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
-  const total = (recipe.prepTime||0)+(recipe.cookTime||0);
+  const total=(recipe.prepTime||0)+(recipe.cookTime||0);
   return (
     <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="modal">
         <div className="modal-hd">
           <div className="modal-title">{recipe.name}</div>
-          <div style={{display:'flex',gap:6}}>
-            <button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button>
-            <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
-          </div>
+          <div style={{display:'flex',gap:6}}><button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button><button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button></div>
         </div>
         <div className="modal-bd">
           <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
-            {recipe.cuisine && <span className="tag">{recipe.cuisine}</span>}
-            {total>0 && <span className="tag">{total} min</span>}
-            {recipe.servings && <span className="tag">{recipe.servings} servings</span>}
-            {recipe.calories>0 && <span className="tag tag-green">{recipe.calories} kcal / serving</span>}
+            {recipe.cuisine&&<span className="tag">{recipe.cuisine}</span>}
+            {total>0&&<span className="tag">{total} min</span>}
+            {recipe.servings&&<span className="tag">{recipe.servings} servings</span>}
+            {recipe.calories>0&&<span className="tag tag-green">{recipe.calories} kcal/serving</span>}
           </div>
-          {(recipe.ingredients||[]).length>0 && <>
+          {(recipe.ingredients||[]).length>0&&<>
             <div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Ingredients</div>
             {recipe.ingredients.map((ing,i)=>(
               <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)',fontSize:'0.83rem'}}>
@@ -600,10 +807,7 @@ function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
             ))}
             <div style={{marginBottom:16}}/>
           </>}
-          {recipe.method && <>
-            <div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Method</div>
-            <div style={{fontSize:'0.82rem',color:'var(--muted)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{recipe.method}</div>
-          </>}
+          {recipe.method&&<><div style={{fontWeight:700,marginBottom:8,fontSize:'0.85rem'}}>Method</div><div style={{fontSize:'0.82rem',color:'var(--muted)',lineHeight:1.7,whiteSpace:'pre-wrap'}}>{recipe.method}</div></>}
           <div className="divider"/>
           <button className="btn btn-danger btn-sm" onClick={onDelete}>Delete recipe</button>
         </div>
@@ -613,116 +817,52 @@ function RecipeDetailModal({ recipe, onEdit, onDelete, onClose }) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  SLOT ACTION MODAL
-// ══════════════════════════════════════════════════════════════
-function SlotActionModal({ recipe, slot, onToggleCooked, onChangeRecipe, onViewRecipe, onClear, onClose }) {
-  const total = (recipe.prepTime||0)+(recipe.cookTime||0);
-  return (
-    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal modal-sm">
-        <div className="modal-hd">
-          <div style={{flex:1}}>
-            <div className="modal-title">{recipe.name}</div>
-            <div style={{fontSize:'0.72rem',color:'var(--muted)',marginTop:3}}>
-              {[recipe.cuisine, total>0&&`${total} min`, recipe.calories>0&&`${recipe.calories} kcal`].filter(Boolean).join(' · ')}
-            </div>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
-        </div>
-        <div className="modal-bd">
-          <button
-            className={`btn ${slot.cooked?'btn-secondary':'btn-primary'}`}
-            style={{width:'100%',justifyContent:'center',marginBottom:8}}
-            onClick={onToggleCooked}
-          >
-            {slot.cooked?'✓ Marked as cooked':'○ Mark as cooked'}
-          </button>
-          <button className="btn btn-secondary" style={{width:'100%',justifyContent:'center',marginBottom:8}} onClick={onViewRecipe}>
-            📖 View recipe
-          </button>
-          <button className="btn btn-secondary" style={{width:'100%',justifyContent:'center',marginBottom:16}} onClick={onChangeRecipe}>
-            🔄 Change recipe
-          </button>
-          <button
-            className="btn btn-ghost"
-            style={{width:'100%',justifyContent:'center',color:'var(--danger)',borderColor:'rgba(224,92,92,0.3)'}}
-            onClick={onClear}
-          >
-            ✕ Clear slot
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════
 //  GROCERY TAB
 // ══════════════════════════════════════════════════════════════
-function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
+function GroceryTab({ recipes, weekData, weekKey, userId }) {
   const [manualInput, setManualInput] = useState('');
-
   const recipeMap = new Map();
-  if (weekData?.meals) {
-    Object.values(weekData.meals).forEach(slot => {
-      const r = recipes.find(x=>x.id===slot.recipeId);
-      if (r && !recipeMap.has(r.id)) recipeMap.set(r.id, r);
-    });
-  }
-
+  if (weekData?.meals) Object.values(weekData.meals).forEach(slot=>{
+    const r=recipes.find(x=>x.id===slot.recipeId); if(r&&!recipeMap.has(r.id)) recipeMap.set(r.id,r);
+  });
   async function toggleCheck(key) {
-    const sc = { ...(weekData?.shopChecked||{}), [key]: !(weekData?.shopChecked?.[key]) };
-    await wDocFn(userId, weekKey).set({ ...weekData, shopChecked: sc }, { merge: true });
+    const sc={...(weekData?.shopChecked||{}),[key]:!(weekData?.shopChecked?.[key])};
+    await wDoc(userId,weekKey).set({...weekData,shopChecked:sc},{merge:true});
   }
-
   async function addManual() {
-    if (!manualInput.trim()) return;
-    const items = [...(weekData?.manualItems||[]), { id: uid(), text: manualInput.trim(), checked: false }];
-    await wDocFn(userId, weekKey).set({ ...weekData, manualItems: items }, { merge: true });
+    if(!manualInput.trim()) return;
+    const items=[...(weekData?.manualItems||[]),{id:uid(),text:manualInput.trim(),checked:false}];
+    await wDoc(userId,weekKey).set({...weekData,manualItems:items},{merge:true});
     setManualInput('');
   }
-
   async function toggleManual(id) {
-    const items = (weekData?.manualItems||[]).map(it=>it.id===id?{...it,checked:!it.checked}:it);
-    await wDocFn(userId, weekKey).set({ ...weekData, manualItems: items }, { merge: true });
+    const items=(weekData?.manualItems||[]).map(it=>it.id===id?{...it,checked:!it.checked}:it);
+    await wDoc(userId,weekKey).set({...weekData,manualItems:items},{merge:true});
   }
-
   async function deleteManual(id) {
-    const items = (weekData?.manualItems||[]).filter(it=>it.id!==id);
-    await wDocFn(userId, weekKey).set({ ...weekData, manualItems: items }, { merge: true });
+    const items=(weekData?.manualItems||[]).filter(it=>it.id!==id);
+    await wDoc(userId,weekKey).set({...weekData,manualItems:items},{merge:true});
   }
-
-  const noMeals = recipeMap.size === 0;
-  const noManual = (weekData?.manualItems||[]).length === 0;
-
   return (<>
-    <div className="section-hd">
-      <div className="section-ttl">Grocery List</div>
-      <div style={{fontSize:'0.75rem',color:'var(--muted)'}}>{weekRange(weekKey)}</div>
-    </div>
-
-    {noMeals && noManual && (
-      <div className="empty-state">No meals planned this week yet.<br/>Head to the Planner tab to add some.</div>
-    )}
-
+    <div className="section-hd"><div className="section-ttl">Grocery List</div><div style={{fontSize:'0.75rem',color:'var(--muted)'}}>{weekRange(weekKey)}</div></div>
+    {recipeMap.size===0&&(weekData?.manualItems||[]).length===0&&<div className="empty-state">No meals planned this week.<br/>Head to the Planner tab to add some.</div>}
     {[...recipeMap.values()].map(recipe=>(
       <div key={recipe.id}>
         <div className="shop-section-title">{recipe.name}</div>
         {(recipe.ingredients||[]).map((ing,i)=>{
-          const key = `${recipe.id}_${i}`;
-          const checked = !!(weekData?.shopChecked?.[key]);
-          const qty = [ing.qty, ing.unit].filter(Boolean).join(' ');
+          const key=`${recipe.id}_${i}`;
+          const checked=!!(weekData?.shopChecked?.[key]);
+          const qty=[ing.qty,ing.unit].filter(Boolean).join(' ');
           return (
             <div key={i} className={`shop-item ${checked?'done':''}`}>
               <input type="checkbox" checked={checked} onChange={()=>toggleCheck(key)}/>
               <span className="shop-item-text">{ing.item}</span>
-              {qty && <span className="shop-item-qty">{qty}</span>}
+              {qty&&<span className="shop-item-qty">{qty}</span>}
             </div>
           );
         })}
       </div>
     ))}
-
     <div>
       <div className="shop-section-title">Added manually</div>
       {(weekData?.manualItems||[]).map(it=>(
@@ -733,12 +873,7 @@ function GroceryTab({ recipes, weekData, weekKey, userId, wDoc: wDocFn }) {
         </div>
       ))}
       <div className="manual-row">
-        <input
-          placeholder="Add an item…"
-          value={manualInput}
-          onChange={e=>setManualInput(e.target.value)}
-          onKeyDown={e=>e.key==='Enter'&&addManual()}
-        />
+        <input placeholder="Add an item…" value={manualInput} onChange={e=>setManualInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addManual()}/>
         <button className="btn btn-primary btn-sm" onClick={addManual}>Add</button>
       </div>
     </div>
@@ -752,168 +887,201 @@ function App() {
   const [user,     setUser]     = useState(undefined);
   const [recipes,  setRecipes]  = useState([]);
   const [weekData, setWeekData] = useState(null);
+  const [profile,  setProfile]  = useState(null);
   const [weekKey,  setWeekKey]  = useState(toISOWeek(new Date()));
   const [streak,   setStreak]   = useState(0);
   const [view,     setView]     = useState('planner');
   const [modal,    setModal]    = useState(null);
   const [seeding,  setSeeding]  = useState(false);
+  const [proposing,setProposing]= useState(false);
   const wdUnsub = useRef(null);
 
-  // Auth
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged(u => setUser(u || null));
-    return unsub;
-  }, []);
+  useEffect(() => { const u=auth.onAuthStateChanged(u=>setUser(u||null)); return u; },[]);
 
-  // Recipes listener
   useEffect(() => {
-    if (!user) { setRecipes([]); return; }
-    const unsub = rCol(user.uid).orderBy('name').onSnapshot(snap => {
-      const data = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!user){setRecipes([]);return;}
+    const u=rCol(user.uid).orderBy('name').onSnapshot(snap=>{
+      const data=snap.docs.map(d=>({id:d.id,...d.data()}));
       setRecipes(data);
-      if (data.length===0 && !seeding) seedRecipes(user.uid);
+      if(data.length===0&&!seeding) seedRecipes(user.uid);
     });
-    return unsub;
-  }, [user]);
+    return u;
+  },[user]);
 
-  // Week data listener
   useEffect(() => {
-    if (!user) return;
-    if (wdUnsub.current) wdUnsub.current();
-    const unsub = wDoc(user.uid, weekKey).onSnapshot(snap => {
-      setWeekData(snap.exists ? snap.data() : { meals:{}, manualItems:[], shopChecked:{} });
+    if(!user) return;
+    if(wdUnsub.current) wdUnsub.current();
+    const u=wDoc(user.uid,weekKey).onSnapshot(snap=>{
+      setWeekData(snap.exists?snap.data():{meals:{},manualItems:[],shopChecked:{}});
     });
-    wdUnsub.current = unsub;
-    return unsub;
-  }, [user, weekKey]);
+    wdUnsub.current=u; return u;
+  },[user,weekKey]);
 
-  // Streak
   useEffect(() => {
-    if (!user) return;
-    stDoc(user.uid).get().then(s => { if(s.exists) setStreak(s.data().count||0); });
-  }, [user]);
+    if(!user) return;
+    stDoc(user.uid).get().then(s=>{if(s.exists)setStreak(s.data().count||0);});
+    prDoc(user.uid).onSnapshot(s=>{if(s.exists)setProfile(s.data());else setProfile(null);});
+  },[user]);
 
   async function seedRecipes(uid) {
     setSeeding(true);
-    const batch = db.batch();
-    SEEDS.forEach(r => batch.set(rCol(uid).doc(), r));
-    await batch.commit();
-    setSeeding(false);
+    const batch=db.batch();
+    SEEDS.forEach(r=>batch.set(rCol(uid).doc(),r));
+    await batch.commit(); setSeeding(false);
   }
 
   function shiftWeek(d) {
-    const s = weekStart(weekKey);
-    s.setUTCDate(s.getUTCDate() + d*7);
-    setWeekKey(toISOWeek(new Date(s)));
+    const s=weekStart(weekKey); s.setUTCDate(s.getUTCDate()+d*7); setWeekKey(toISOWeek(new Date(s)));
+  }
+  function slotKey(di,meal) { return `${di}_${meal.toLowerCase()}`; }
+  function getMeal(di,meal)  { return weekData?.meals?.[slotKey(di,meal)]||null; }
+  function getRecipe(id)     { return recipes.find(r=>r.id===id)||null; }
+
+  async function setMeal(di,meal,recipeId) {
+    const key=slotKey(di,meal);
+    const meals={...(weekData?.meals||{})};
+    if(recipeId) meals[key]={recipeId,cooked:false};
+    else delete meals[key];
+    await wDoc(user.uid,weekKey).set({...(weekData||{}),meals},{merge:true});
   }
 
-  function slotKey(di, meal) { return `${di}_${meal.toLowerCase()}`; }
-  function getMeal(di, meal) { return weekData?.meals?.[slotKey(di,meal)] || null; }
-  function getRecipe(id)     { return recipes.find(r=>r.id===id) || null; }
-
-  async function setMeal(di, meal, recipeId) {
-    const key = slotKey(di, meal);
-    const docRef = wDoc(user.uid, weekKey);
-    if (recipeId) {
-      await docRef.set({ meals: { [key]: { recipeId, cooked: false } } }, { merge: true });
-    } else {
-      await docRef.update({ [`meals.${key}`]: firebase.firestore.FieldValue.delete() });
-    }
+  async function toggleCooked(di,meal) {
+    const key=slotKey(di,meal); const slot=weekData?.meals?.[key];
+    if(!slot) return;
+    const meals={...weekData.meals,[key]:{...slot,cooked:!slot.cooked}};
+    await wDoc(user.uid,weekKey).set({...weekData,meals},{merge:true});
   }
 
-  async function toggleCooked(di, meal) {
-    const key = slotKey(di, meal);
-    const slot = weekData?.meals?.[key];
-    if (!slot) return;
-    await wDoc(user.uid, weekKey).update({ [`meals.${key}.cooked`]: !slot.cooked });
-  }
+  // ── Calorie target from profile ──────────────────────────────
+  const dailyKcalTarget = (() => {
+    if (!profile) return 0;
+    const {gender,age,height,weight,activity,goal} = profile;
+    const h=parseFloat(height),w=parseFloat(weight),a=parseInt(age);
+    if(!h||!w||!a) return 0;
+    const bmr=calcBMR(gender,w,h,a);
+    const tdee=calcTDEE(bmr,activity);
+    return calorieTarget(tdee,goal);
+  })();
 
-  function calcScore() {
-    const all = weekData?.meals ? Object.values(weekData.meals) : [];
-    const planned = all.length, cooked = all.filter(s=>s.cooked).length;
-    const planPct = Math.round(planned/21*100);
-    const cookPct = planned>0 ? Math.round(cooked/planned*100) : 0;
-    return { planned, cooked, planPct, cookPct, score: Math.round(planPct*0.35+cookPct*0.65) };
+  function mealBudget(meal) {
+    return dailyKcalTarget > 0 ? Math.round(dailyKcalTarget * MEAL_SPLIT[meal]) : 0;
   }
 
   function dailyCalories() {
-    return DAYS.map((_,di) => {
-      let total = 0;
-      MEALS.forEach(meal => {
-        const slot = getMeal(di, meal);
-        if (!slot) return;
-        const r = getRecipe(slot.recipeId);
-        if (r?.calories) total += r.calories;
+    return DAYS.map((_,di)=>{
+      let total=0;
+      MEALS.forEach(meal=>{
+        const slot=getMeal(di,meal); if(!slot) return;
+        const r=getRecipe(slot.recipeId); if(r?.calories) total+=r.calories;
       });
       return total;
     });
   }
 
-  async function saveRecipe(data, id) {
-    if (id) await rCol(user.uid).doc(id).set(data);
+  function calcScore() {
+    const all=weekData?.meals?Object.values(weekData.meals):[];
+    const planned=all.length, cooked=all.filter(s=>s.cooked).length;
+    const planPct=Math.round(planned/21*100);
+    const cookPct=planned>0?Math.round(cooked/planned*100):0;
+    return {planned,cooked,planPct,cookPct,score:Math.round(planPct*0.35+cookPct*0.65)};
+  }
+
+  // ── Auto-propose ─────────────────────────────────────────────
+  async function autoProposeWeek() {
+    if(recipes.length===0) return;
+    setProposing(true);
+    const usedThisWeek = new Set();
+    const newMeals = {...(weekData?.meals||{})};
+
+    // Shuffle helper
+    function shuffle(arr) {
+      const a=[...arr];
+      for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+      return a;
+    }
+
+    // Collect already-assigned recipes so we don't repeat
+    Object.values(newMeals).forEach(slot=>{ if(slot?.recipeId) usedThisWeek.add(slot.recipeId); });
+
+    for(let di=0;di<7;di++){
+      for(const meal of MEALS){
+        const key=slotKey(di,meal);
+        if(newMeals[key]) continue; // skip filled slots
+        const budget=mealBudget(meal);
+
+        // Filter candidates: prefer unused this week, within calorie budget
+        let candidates = shuffle(recipes).filter(r=>{
+          if(usedThisWeek.has(r.id)) return false;
+          if(budget>0&&r.calories>0&&r.calories>budget*1.3) return false;
+          return true;
+        });
+
+        // Fallback: allow repeats if not enough variety
+        if(candidates.length===0){
+          candidates = shuffle(recipes).filter(r=>{
+            if(budget>0&&r.calories>0&&r.calories>budget*1.3) return false;
+            return true;
+          });
+        }
+        // Last resort: any recipe
+        if(candidates.length===0) candidates=shuffle(recipes);
+
+        if(candidates.length>0){
+          const pick=candidates[0];
+          newMeals[key]={recipeId:pick.id,cooked:false};
+          usedThisWeek.add(pick.id);
+        }
+      }
+    }
+
+    await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:newMeals},{merge:true});
+    setProposing(false);
+  }
+
+  async function clearWeek() {
+    if(!confirm('Clear all meals for this week?')) return;
+    await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:{}},{merge:true});
+  }
+
+  // ── Recipe CRUD ──────────────────────────────────────────────
+  async function saveRecipe(data,id) {
+    if(id) await rCol(user.uid).doc(id).set(data);
     else await rCol(user.uid).add(data);
     setModal(null);
   }
-
   async function deleteRecipe(id) {
-    if (!confirm('Delete this recipe?')) return;
-    await rCol(user.uid).doc(id).delete();
-    setModal(null);
+    if(!confirm('Delete this recipe?')) return;
+    await rCol(user.uid).doc(id).delete(); setModal(null);
+  }
+  async function bulkImport(list) {
+    const batch=db.batch();
+    list.forEach(r=>batch.set(rCol(user.uid).doc(),r));
+    await batch.commit(); setModal(null);
   }
 
-  async function autoFill() {
-    if (recipes.length === 0) return;
-    const newMeals = {};
-    DAYS.forEach((_, di) => {
-      MEALS.forEach(meal => {
-        const key = slotKey(di, meal);
-        if (!weekData?.meals?.[key]) {
-          const r = recipes[Math.floor(Math.random() * recipes.length)];
-          newMeals[key] = { recipeId: r.id, cooked: false };
-        }
-      });
-    });
-    if (Object.keys(newMeals).length > 0)
-      await wDoc(user.uid, weekKey).set({ meals: newMeals }, { merge: true });
-  }
+  // ── Loading / auth gate ──────────────────────────────────────
+  if(user===undefined) return <div className="loading-full"><span className="spinner"/><span>Loading…</span></div>;
+  if(!user) return <AuthScreen/>;
 
-  async function copyLastWeek() {
-    const s = weekStart(weekKey);
-    s.setUTCDate(s.getUTCDate() - 7);
-    const prevWk = toISOWeek(new Date(s));
-    const snap = await wDoc(user.uid, prevWk).get();
-    if (!snap.exists) return alert('No plan found for last week.');
-    const prevMeals = snap.data()?.meals || {};
-    if (Object.keys(prevMeals).length === 0) return alert('Last week had no meals planned.');
-    const newMeals = {};
-    Object.entries(prevMeals).forEach(([key, slot]) => {
-      if (!weekData?.meals?.[key])
-        newMeals[key] = { recipeId: slot.recipeId, cooked: false };
-    });
-    if (Object.keys(newMeals).length > 0)
-      await wDoc(user.uid, weekKey).set({ meals: newMeals }, { merge: true });
-  }
+  const sc=calcScore();
+  const calsByDay=dailyCalories();
+  const hasCals=calsByDay.some(c=>c>0)||dailyKcalTarget>0;
 
-  function renderSlot(di, meal) {
-    const slot   = getMeal(di, meal);
-    const recipe = slot ? getRecipe(slot.recipeId) : null;
+  // ── Planner slot renderer ────────────────────────────────────
+  function renderSlot(di, meal, isMobile=false) {
+    const slot=getMeal(di,meal); const recipe=slot?getRecipe(slot.recipeId):null;
     return (
-      <div
-        className={`slot ${slot?'filled':'empty'} ${slot?.cooked?'cooked':''}`}
-        onClick={()=> slot
-          ? setModal({type:'slotAction', di, meal})
-          : setModal({type:'picker', di, meal, currentId: null})
-        }
-      >
-        {recipe ? (<>
-          <button className="slot-clear" onClick={e=>{ e.stopPropagation(); setMeal(di, meal, null); }} title="Clear slot">✕</button>
+      <div className={`slot ${slot?'filled':'empty'} ${slot?.cooked?'cooked':''}`}
+        onClick={()=>setModal({type:'picker',di,meal,currentId:slot?.recipeId||null,calBudget:mealBudget(meal)})}>
+        {recipe?(<>
+          <button className="slot-clear" onClick={e=>{e.stopPropagation();setMeal(di,meal,null);}}>✕</button>
           <div className="slot-name">{recipe.name}</div>
-          <div className="slot-meta">
-            {recipe.cuisine && <span>{recipe.cuisine}</span>}
-            {(recipe.prepTime||recipe.cookTime) ? <span> · {(recipe.prepTime||0)+(recipe.cookTime||0)}m</span> : null}
-          </div>
-          {recipe.calories>0 && <div className="slot-kcal">{recipe.calories} kcal</div>}
-        </>) : (<>
+          <div className="slot-meta">{recipe.cuisine&&<span>{recipe.cuisine}</span>}{(recipe.prepTime||recipe.cookTime)?<span> · {(recipe.prepTime||0)+(recipe.cookTime||0)}m</span>:null}</div>
+          {recipe.calories>0&&<div className="slot-kcal">{recipe.calories} kcal</div>}
+          <button className="slot-btn" onClick={e=>{e.stopPropagation();toggleCooked(di,meal);}}>
+            {slot.cooked?'✓ cooked':'○ mark cooked'}
+          </button>
+        </>):(<>
           <div className="slot-empty-icon">+</div>
           <div className="slot-empty-text">Add meal</div>
         </>)}
@@ -921,20 +1089,11 @@ function App() {
     );
   }
 
-  // ── Loading / auth gate ──────────────────────────────────────
-  if (user === undefined) return <div className="loading-full"><span className="spinner"/><span>Loading…</span></div>;
-  if (!user) return <AuthScreen/>;
-
-  const sc = calcScore();
-  const calsByDay = dailyCalories();
-  const hasCals = calsByDay.some(c=>c>0);
-
   return (
     <div className="app-shell">
-      {/* Top bar */}
       <div className="topbar">
         <div className="topbar-logo">mise</div>
-        {streak>0 && <span className="streak-badge" style={{fontSize:'0.7rem',padding:'2px 8px'}}>🔥 {streak}w</span>}
+        {streak>0&&<span className="streak-badge" style={{fontSize:'0.7rem',padding:'2px 8px'}}>🔥 {streak}w</span>}
         <div className="topbar-spacer"/>
         <div className="topbar-week">{weekKey}</div>
         <div className="topbar-user">{user.displayName||user.email}</div>
@@ -942,39 +1101,26 @@ function App() {
       </div>
 
       <div className="main">
-        {/* View tabs */}
         <div className="view-tabs">
           <button className={`view-tab ${view==='planner'?'active':''}`}  onClick={()=>setView('planner')}>📅 Planner</button>
           <button className={`view-tab ${view==='grocery'?'active':''}`}  onClick={()=>setView('grocery')}>🛒 Grocery</button>
           <button className={`view-tab ${view==='recipes'?'active':''}`}  onClick={()=>setView('recipes')}>📖 Recipes</button>
+          <button className={`view-tab ${view==='profile'?'active':''}`}  onClick={()=>setView('profile')}>👤 Profile</button>
         </div>
 
-        {/* ── PLANNER ── */}
-        {view==='planner' && <>
+        {/* ═══ PLANNER ═══ */}
+        {view==='planner'&&<>
           <div className="week-nav">
             <button className="btn btn-ghost btn-sm" onClick={()=>shiftWeek(-1)}>← Prev</button>
             <div className="week-nav-label">{weekRange(weekKey)}</div>
             <button className="btn btn-ghost btn-sm" onClick={()=>shiftWeek(1)}>Next →</button>
           </div>
-          <div className="week-actions" style={{display:'flex',gap:8,marginBottom:18,justifyContent:'flex-end'}}>
-            <button className="btn btn-ghost btn-sm" onClick={copyLastWeek} title="Copy last week's meals into empty slots">↩ Copy last week</button>
-            <button className="btn btn-ghost btn-sm" onClick={autoFill} title="Randomly fill empty slots from your recipe library">⚡ Auto-fill empty</button>
-          </div>
 
+          {/* Score pills */}
           <div className="score-bar">
             <div className="score-pill">
-              <div className="score-pill-label">
-                Week Score
-                <span className="score-info">
-                  <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style={{color:'var(--muted)'}}>
-                    <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm0 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zm0 3.75a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm0 2.5a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0V8.5A.75.75 0 0 1 8 7.75z"/>
-                  </svg>
-                  <span className="score-tip">35% from meals planned (/21)<br/>65% from meals cooked</span>
-                </span>
-              </div>
-              <div className={`score-pill-value ${sc.score>=70?'c-accent2':sc.score>=40?'c-warn':'c-accent'}`}>
-                {sc.score}<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/100</span>
-              </div>
+              <div className="score-pill-label">Week Score</div>
+              <div className={`score-pill-value ${sc.score>=70?'c-accent2':sc.score>=40?'c-warn':'c-accent'}`}>{sc.score}<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/100</span></div>
               <div className="progress-bar-wrap"><div className="progress-bar-fill" style={{width:`${sc.score}%`,background:sc.score>=70?'var(--accent2)':sc.score>=40?'var(--warn)':'var(--accent)'}}/></div>
             </div>
             <div className="score-pill">
@@ -987,47 +1133,58 @@ function App() {
               <div className="score-pill-value c-accent2">{sc.cooked}{sc.planned>0&&<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}>/{sc.planned}</span>}</div>
               <div className="progress-bar-wrap"><div className="progress-bar-fill" style={{width:`${sc.cookPct}%`,background:'var(--accent2)'}}/></div>
             </div>
-            {streak>0 && <div className="score-pill" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {dailyKcalTarget>0&&<div className="score-pill">
+              <div className="score-pill-label">Daily target</div>
+              <div className="score-pill-value c-warn">{dailyKcalTarget}<span style={{fontSize:'0.68rem',fontWeight:400,color:'var(--muted)'}}> kcal</span></div>
+              <div style={{fontSize:'0.65rem',color:'var(--muted)',marginTop:4}}>
+                ☀️{Math.round(dailyKcalTarget*0.25)} · 🌤️{Math.round(dailyKcalTarget*0.35)} · 🌙{Math.round(dailyKcalTarget*0.40)}
+              </div>
+            </div>}
+            {streak>0&&<div className="score-pill" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
               <div className="streak-badge">🔥 {streak} week{streak!==1?'s':''} streak</div>
             </div>}
           </div>
 
-          {/* Daily calorie pills */}
-          {hasCals && (
-            <div className="calorie-row">
-              {calsByDay.map((cal,di) => cal>0 ? (
-                <div key={di} className="calorie-pill">
-                  <span className="calorie-pill-day">{DAYS[di].slice(0,3)}</span>
-                  <span>{cal} kcal</span>
-                </div>
-              ) : null)}
+          {/* Daily calorie budget pills */}
+          {hasCals&&(
+            <div className="budget-row">
+              {calsByDay.map((cal,di)=>{
+                const target=dailyKcalTarget;
+                const hasData = cal>0||target>0;
+                if(!hasData) return null;
+                const over = target>0&&cal>target*1.1;
+                const under = target>0&&cal<target*0.6&&cal>0;
+                return (
+                  <div key={di} className={`budget-pill ${over?'over':under?'':cal>0?'under':''}`}>
+                    <div className="budget-day">{DAYS[di].slice(0,3)}</div>
+                    <div className="budget-val" style={{color:over?'var(--danger)':cal>0?'var(--accent2)':'var(--muted)'}}>{cal||'—'}{cal>0?' kcal':''}</div>
+                    {target>0&&<div className="budget-sub">{cal>0?`${over?'↑ over':Math.round(target-cal)+' left'}`:`of ${target}`}</div>}
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {/* Desktop planner grid */}
-          <div className="planner-wrap desktop-planner">
+          {/* Action buttons */}
+          <div className="week-actions">
+            <button className="btn btn-success btn-sm" onClick={autoProposeWeek} disabled={proposing||recipes.length===0}>
+              {proposing?<><span className="spinner" style={{width:14,height:14}}/> Proposing…</>:'✨ Auto-propose week'}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={clearWeek}>Clear week</button>
+          </div>
+
+          {/* Desktop planner */}
+          <div className="desktop-planner planner-wrap">
             <table className="planner-table">
-              <thead>
-                <tr>
-                  <th/>
-                  {MEALS.map((m,mi)=><th key={m}>{ICONS[mi]} {m}</th>)}
-                </tr>
-              </thead>
+              <thead><tr><th/>{MEALS.map((m,mi)=><th key={m}>{ICONS[mi]} {m}{dailyKcalTarget>0&&<span style={{fontWeight:400,color:'var(--muted)'}}> ~{mealBudget(m)} kcal</span>}</th>)}</tr></thead>
               <tbody>
                 {DAYS.map((day,di)=>{
-                  const isToday = dayDateStr(weekKey,di)===todayStr();
-                  const past    = isPastDay(weekKey,di) && !isToday;
+                  const isToday=dayDateStr(weekKey,di)===todayStr();
+                  const past=isPastDay(weekKey,di);
                   return (
                     <tr key={day} className={past?'past-day':''}>
-                      <td>
-                        <div className={isToday?'today':''}>
-                          <div className="day-name">{day.slice(0,3)}</div>
-                          <div className="day-date">{dayDateStr(weekKey,di)}</div>
-                        </div>
-                      </td>
-                      {MEALS.map(meal=>(
-                        <td key={meal}>{renderSlot(di, meal)}</td>
-                      ))}
+                      <td><div className={isToday?'today':''}><div className="day-name">{day.slice(0,3)}</div><div className="day-date">{dayDateStr(weekKey,di)}</div></div></td>
+                      {MEALS.map(meal=><td key={meal}>{renderSlot(di,meal)}</td>)}
                     </tr>
                   );
                 })}
@@ -1035,22 +1192,22 @@ function App() {
             </table>
           </div>
 
-          {/* Mobile planner cards */}
+          {/* Mobile planner */}
           <div className="mobile-planner">
             {DAYS.map((day,di)=>{
-              const isToday = dayDateStr(weekKey,di)===todayStr();
-              const past    = isPastDay(weekKey,di) && !isToday;
+              const isToday=dayDateStr(weekKey,di)===todayStr();
+              const past=isPastDay(weekKey,di);
               return (
-                <div key={day} className={`day-card ${past?'past-day':''}`}>
+                <div key={day} className="day-card" style={past?{opacity:0.5}:{}}>
                   <div className={`day-card-hd ${isToday?'today':''}`}>
-                    <div className="day-name">{day}</div>
-                    <div className="day-date">{dayDateStr(weekKey,di)}</div>
+                    <div><div className="day-name">{day}</div><div className="day-date">{dayDateStr(weekKey,di)}</div></div>
+                    {calsByDay[di]>0&&<span style={{fontSize:'0.75rem',color:'var(--accent2)',fontWeight:700}}>{calsByDay[di]} kcal</span>}
                   </div>
                   <div className="day-card-meals">
                     {MEALS.map((meal,mi)=>(
                       <div key={meal}>
                         <div className="day-card-meal-label">{ICONS[mi]} {meal}</div>
-                        {renderSlot(di, meal)}
+                        {renderSlot(di,meal,true)}
                       </div>
                     ))}
                   </div>
@@ -1058,93 +1215,63 @@ function App() {
               );
             })}
           </div>
+
+          {!profile&&<div className="warn-box" style={{marginTop:16}}>👤 Set up your <strong onClick={()=>setView('profile')} style={{cursor:'pointer',color:'var(--accent)',textDecoration:'underline'}}>health profile</strong> to see calorie targets and get smarter meal proposals.</div>}
         </>}
 
-        {/* ── GROCERY ── */}
-        {view==='grocery' && (
-          <GroceryTab
-            recipes={recipes}
-            weekData={weekData}
-            weekKey={weekKey}
-            userId={user.uid}
-            wDoc={wDoc}
-          />
-        )}
+        {/* ═══ GROCERY ═══ */}
+        {view==='grocery'&&<GroceryTab recipes={recipes} weekData={weekData} weekKey={weekKey} userId={user.uid}/>}
 
-        {/* ── RECIPES ── */}
-        {view==='recipes' && <>
+        {/* ═══ RECIPES ═══ */}
+        {view==='recipes'&&<>
           <div className="section-hd">
-            <div className="section-ttl">Recipe Library</div>
+            <div className="section-ttl">Recipe Library <span style={{fontSize:'0.78rem',fontWeight:400,color:'var(--muted)'}}>{recipes.length} recipes</span></div>
+            <button className="btn btn-ghost btn-sm" onClick={()=>setModal({type:'import'})}>⬆ Import</button>
             <button className="btn btn-primary btn-sm" onClick={()=>setModal({type:'recipeForm'})}>+ New recipe</button>
           </div>
-          {recipes.length===0 && <div className="empty-state">{seeding?'Loading seed recipes…':'No recipes yet. Add one!'}</div>}
+          {recipes.length===0&&<div className="empty-state">{seeding?'Loading seed recipes…':'No recipes yet. Add one or bulk import!'}</div>}
           <div className="recipe-grid">
             {recipes.map(r=>(
               <div key={r.id} className="recipe-card" onClick={()=>setModal({type:'recipeDetail',recipe:r})}>
                 <div className="recipe-card-name">{r.name}</div>
                 <div className="recipe-card-meta">
-                  {r.cuisine && <span>{r.cuisine}</span>}
-                  {(r.prepTime||r.cookTime) ? <span>{(r.prepTime||0)+(r.cookTime||0)} min</span> : null}
-                  {r.calories>0 && <span style={{color:'var(--accent2)',fontWeight:600}}>{r.calories} kcal</span>}
+                  {r.cuisine&&<span>{r.cuisine}</span>}
+                  {(r.prepTime||r.cookTime)?<span>{(r.prepTime||0)+(r.cookTime||0)} min</span>:null}
+                  {r.calories>0&&<span style={{color:'var(--accent2)',fontWeight:600}}>{r.calories} kcal</span>}
                 </div>
               </div>
             ))}
           </div>
         </>}
+
+        {/* ═══ PROFILE ═══ */}
+        {view==='profile'&&<ProfileTab userId={user.uid}/>}
       </div>
 
-      {/* ── MODALS ── */}
-      {modal?.type==='slotAction' && (()=>{
-        const slot   = weekData?.meals?.[slotKey(modal.di, modal.meal)];
-        const recipe = slot ? getRecipe(slot.recipeId) : null;
-        if (!slot || !recipe) return null;
-        return (
-          <SlotActionModal
-            recipe={recipe}
-            slot={slot}
-            onToggleCooked={()=>{ toggleCooked(modal.di, modal.meal); setModal(null); }}
-            onViewRecipe={()=>setModal({type:'recipeDetail', recipe, fromSlot:{di:modal.di, meal:modal.meal}})}
-            onChangeRecipe={()=>setModal({type:'picker', di:modal.di, meal:modal.meal, currentId:slot.recipeId})}
-            onClear={()=>{ setMeal(modal.di, modal.meal, null); setModal(null); }}
-            onClose={()=>setModal(null)}
-          />
-        );
-      })()}
-      {modal?.type==='picker' && (
-        <MealPickerModal
-          recipes={recipes}
-          currentId={modal.currentId}
-          onPick={r=>{ setMeal(modal.di, modal.meal, r.id); setModal(null); }}
-          onClear={()=>{ setMeal(modal.di, modal.meal, null); setModal(null); }}
-          onClose={()=>setModal(null)}
-        />
+      {/* ── Modals ── */}
+      {modal?.type==='picker'&&(
+        <MealPickerModal recipes={recipes} currentId={modal.currentId} calBudget={modal.calBudget||0}
+          onPick={r=>{setMeal(modal.di,modal.meal,r.id);setModal(null);}}
+          onClear={()=>{setMeal(modal.di,modal.meal,null);setModal(null);}}
+          onClose={()=>setModal(null)}/>
       )}
-      {modal?.type==='recipeForm' && (
-        <RecipeFormModal
-          initial={modal.recipe}
-          onSave={data=>saveRecipe(data, modal.recipe?.id)}
-          onClose={()=>setModal(null)}
-        />
+      {modal?.type==='recipeForm'&&(
+        <RecipeFormModal initial={modal.recipe} onSave={data=>saveRecipe(data,modal.recipe?.id)} onClose={()=>setModal(null)}/>
       )}
-      {modal?.type==='recipeDetail' && (
-        <RecipeDetailModal
-          recipe={modal.recipe}
-          onEdit={()=>setModal({type:'recipeForm', recipe:modal.recipe})}
+      {modal?.type==='recipeDetail'&&(
+        <RecipeDetailModal recipe={modal.recipe}
+          onEdit={()=>setModal({type:'recipeForm',recipe:modal.recipe})}
           onDelete={()=>deleteRecipe(modal.recipe.id)}
-          onClose={()=> modal.fromSlot
-            ? setModal({type:'slotAction', di:modal.fromSlot.di, meal:modal.fromSlot.meal})
-            : setModal(null)
-          }
-        />
+          onClose={()=>setModal(null)}/>
+      )}
+      {modal?.type==='import'&&(
+        <ImportModal onImport={bulkImport} onClose={()=>setModal(null)}/>
       )}
     </div>
   );
 }
 
-// ══════════════════════════════════════════════════════════════
-//  ENTRY
-// ══════════════════════════════════════════════════════════════
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+ReactDOM.createRoot(document.getElementById('root')).render(IS_CONFIGURED ? <App/> : <div style={{color:'white',padding:40}}>Paste your Firebase config into the FIREBASE_CONFIG block at the top of this file.</div>);
 </script>
 </body>
 </html>
