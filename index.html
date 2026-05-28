@@ -799,7 +799,7 @@ function RecipeDetailModal({ recipe, canEdit, onEdit, onDelete, onClose }) {
             {total>0&&<span className="tag">{total} min</span>}
             {recipe.servings&&<span className="tag">{recipe.servings} servings</span>}
             {recipe.calories>0&&<span className="tag tag-green">{recipe.calories} kcal/serving</span>}
-            {recipe.planCount>0&&<span className="tag tag-warn">🔥 {recipe.planCount} plans</span>}
+            {recipe.planCount>0&&<span className="tag tag-warn">🔥 {recipe.planCount}× planned</span>}
           </div>
           {recipe.createdByName&&<div style={{fontSize:'0.72rem',color:'var(--muted)',marginBottom:14}}>
             Added by <strong>{recipe.createdBy==='system'?'mise (default)':recipe.createdByName}</strong>
@@ -901,17 +901,25 @@ function App() {
   const [modal,    setModal]    = useState(null);
   const [seeding,  setSeeding]  = useState(false);
   const [proposing,setProposing]= useState(false);
-  const wdUnsub = useRef(null);
+  const wdUnsub    = useRef(null);
+  const seedingRef = useRef(false); // ref, not state — avoids stale closure in onSnapshot
 
   useEffect(() => { const u=auth.onAuthStateChanged(u=>setUser(u||null)); return u; },[]);
 
   useEffect(() => {
     if(!user){setRecipes([]);return;}
-    const u=rCol().orderBy('name').onSnapshot(snap=>{
-      const data=snap.docs.map(d=>({id:d.id,...d.data()}));
-      setRecipes(data);
-      if(data.length===0&&!seeding) seedRecipes();
-    });
+    const u=rCol().orderBy('name').onSnapshot(
+      snap=>{
+        const data=snap.docs.map(d=>({id:d.id,...d.data()}));
+        setRecipes(data);
+        // Use a ref (not state) so the closure never goes stale
+        if(data.length===0 && !seedingRef.current) {
+          seedingRef.current = true;
+          seedRecipes(user).finally(()=>{ seedingRef.current = false; });
+        }
+      },
+      err=>console.error('recipes listener error:', err)
+    );
     return u;
   },[user]);
 
@@ -930,11 +938,22 @@ function App() {
     prDoc(user.uid).onSnapshot(s=>{if(s.exists)setProfile(s.data());else setProfile(null);});
   },[user]);
 
-  async function seedRecipes() {
+  async function seedRecipes(currentUser) {
     setSeeding(true);
-    const batch=db.batch();
-    SEEDS.forEach(r=>batch.set(rCol().doc(), r));
-    await batch.commit(); setSeeding(false);
+    try {
+      const batch=db.batch();
+      SEEDS.forEach(r=>batch.set(rCol().doc(), {
+        ...r,
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName || currentUser.email || 'mise',
+        planCount: 0,
+      }));
+      await batch.commit();
+    } catch(err) {
+      console.error('seeding failed:', err);
+    } finally {
+      setSeeding(false);
+    }
   }
 
   function shiftWeek(d) {
@@ -949,14 +968,10 @@ function App() {
     const oldSlot=weekData?.meals?.[key];
     const meals={...(weekData?.meals||{})};
 
-    // Decrement old recipe's planCount (fire-and-forget, don't block UX)
-    if(oldSlot?.recipeId && oldSlot.recipeId!==recipeId) {
-      rCol().doc(oldSlot.recipeId).update({planCount:firebase.firestore.FieldValue.increment(-1)}).catch(()=>{});
-    }
-
     if(recipeId) {
       meals[key]={recipeId,cooked:false};
-      // Only increment if this is a new recipe for this slot
+      // Increment planCount only when a new recipe is assigned to this slot
+      // planCount is cumulative (never decrements) — it reflects all-time popularity
       if(!oldSlot||oldSlot.recipeId!==recipeId) {
         rCol().doc(recipeId).update({planCount:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
       }
@@ -1061,6 +1076,7 @@ function App() {
 
   async function clearWeek() {
     if(!confirm('Clear all meals for this week?')) return;
+    // planCount is cumulative — no decrement on clear
     await wDoc(user.uid,weekKey).set({...(weekData||{}),meals:{}},{merge:true});
   }
 
